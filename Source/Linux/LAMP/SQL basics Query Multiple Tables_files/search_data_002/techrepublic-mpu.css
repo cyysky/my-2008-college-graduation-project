@@ -1,0 +1,73 @@
+body {
+background-color: #DDE2E8;
+font-family:Arial,Helvetica,sans-serif;
+font-size:12px;
+color:#333;
+margin:0px;
+}
+
+a {
+color:#000;
+text-decoration:none;
+}
+
+a:hover {
+text-decoration:underline;
+}
+
+ul, li {
+padding:0px;
+border:0px;
+margin:0px;
+list-style:none;
+}
+
+li {
+padding:5px;
+}
+
+h2 {
+padding:0px;
+margin:0px;
+}
+
+#bwbox {
+padding:5px;
+position:relative;
+}
+
+#bwhead {
+font: 120% Verdana,Arial,Helvetica,sans-serif;
+font-weight: bold;
+color: #000;
+}
+
+.bwtitle {
+font: 100% Arial, Helvetica, sans-serif;
+font-weight:bold;
+color:#cc0000;
+text-decoration:none;
+background:url(http://image.com.com/tv/images/arrow-right.gif) no-repeat;
+padding-left:15px;
+}
+
+.bwtext {
+color:#000;
+}
+
+.bwurl {
+color:#1e8e1e;
+text-decoration: none;
+}
+
+p { 
+position:absolute; 
+top:5px; 
+right:5px;
+}
+
+.bw_disclaimer:hover {
+text-decoration:underline;
+}
+
+.bwrlinktext { display:none; }

@@ -1,0 +1,830 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>Chapter 21. INFORMATION_SCHEMA Tables</title><link rel="stylesheet" href="mysql-html.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.69.1"><link rel="start" href="index.html" title="MySQL 5.0 Reference Manual"><link rel="up" href="index.html" title="MySQL 5.0 Reference Manual"><link rel="prev" href="views.html" title="Chapter 20. Views"><link rel="next" href="precision-math.html" title="Chapter 22. Precision Math"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 21. <code class="literal">INFORMATION_SCHEMA</code> Tables</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="views.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="precision-math.html">Next</a></td></tr></table><hr></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="information-schema"></a>Chapter 21. <code class="literal">INFORMATION_SCHEMA</code> Tables</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="information-schema.html#schemata-table">21.1. The <code class="literal">INFORMATION_SCHEMA SCHEMATA</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#tables-table">21.2. The <code class="literal">INFORMATION_SCHEMA TABLES</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#columns-table">21.3. The <code class="literal">INFORMATION_SCHEMA COLUMNS</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#statistics-table">21.4. The <code class="literal">INFORMATION_SCHEMA STATISTICS</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#user-privileges-table">21.5. The <code class="literal">INFORMATION_SCHEMA USER_PRIVILEGES</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#schema-privileges-table">21.6. The <code class="literal">INFORMATION_SCHEMA SCHEMA_PRIVILEGES</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#table-privileges-table">21.7. The <code class="literal">INFORMATION_SCHEMA TABLE_PRIVILEGES</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#column-privileges-table">21.8. The <code class="literal">INFORMATION_SCHEMA COLUMN_PRIVILEGES</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#character-sets-table">21.9. The <code class="literal">INFORMATION_SCHEMA CHARACTER_SETS</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#collations-table">21.10. The <code class="literal">INFORMATION_SCHEMA COLLATIONS</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#collation-character-set-applicability-table">21.11. The <code class="literal">INFORMATION_SCHEMA
+      COLLATION_CHARACTER_SET_APPLICABILITY</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#table-constraints-table">21.12. The <code class="literal">INFORMATION_SCHEMA TABLE_CONSTRAINTS</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#key-column-usage-table">21.13. The <code class="literal">INFORMATION_SCHEMA KEY_COLUMN_USAGE</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#routines-table">21.14. The <code class="literal">INFORMATION_SCHEMA ROUTINES</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#views-table">21.15. The <code class="literal">INFORMATION_SCHEMA VIEWS</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#triggers-table">21.16. The <code class="literal">INFORMATION_SCHEMA TRIGGERS</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#profiling-table">21.17. The <code class="literal">INFORMATION_SCHEMA PROFILING</code> Table</a></span></dt><dt><span class="section"><a href="information-schema.html#other-information-schema-tables">21.18. Other <code class="literal">INFORMATION_SCHEMA</code> Tables</a></span></dt><dt><span class="section"><a href="information-schema.html#extended-show">21.19. Extensions to <code class="literal">SHOW</code> Statements</a></span></dt></dl></div><a class="indexterm" name="id4512375"></a><a class="indexterm" name="id4512387"></a><a class="indexterm" name="id4512396"></a><a class="indexterm" name="id4512405"></a><a class="indexterm" name="id4512414"></a><p>
+    <code class="literal">INFORMATION_SCHEMA</code> provides access to database
+    metadata.
+  </p><p>
+    <em class="firstterm">Metadata</em> is data about the data, such as the
+    name of a database or table, the data type of a column, or access
+    privileges. Other terms that sometimes are used for this information
+    are <em class="firstterm">data dictionary</em> and <em class="firstterm">system
+    catalog</em>.
+  </p><p>
+    <code class="literal">INFORMATION_SCHEMA</code> is the information database,
+    the place that stores information about all the other databases that
+    the MySQL server maintains. Inside
+    <code class="literal">INFORMATION_SCHEMA</code> there are several read-only
+    tables. They are actually views, not base tables, so there are no
+    files associated with them.
+  </p><p>
+    In effect, we have a database named
+    <code class="literal">INFORMATION_SCHEMA</code>, although the server does not
+    create a database directory with that name. It is possible to select
+    <code class="literal">INFORMATION_SCHEMA</code> as the default database with a
+    <code class="literal">USE</code> statement, but it is possible only to read
+    the contents of tables. You cannot insert into them, update them, or
+    delete from them.
+  </p><p>
+    Here is an example of a statement that retrieves information from
+    <code class="literal">INFORMATION_SCHEMA</code>:
+  </p><pre class="programlisting">mysql&gt; <strong class="userinput"><code>SELECT table_name, table_type, engine</code></strong>
+    -&gt; <strong class="userinput"><code>FROM information_schema.tables</code></strong>
+    -&gt; <strong class="userinput"><code>WHERE table_schema = 'db5'</code></strong>
+    -&gt; <strong class="userinput"><code>ORDER BY table_name DESC;</code></strong>
++------------+------------+--------+
+| table_name | table_type | engine |
++------------+------------+--------+
+| v56        | VIEW       | NULL   |
+| v3         | VIEW       | NULL   |
+| v2         | VIEW       | NULL   |
+| v          | VIEW       | NULL   |
+| tables     | BASE TABLE | MyISAM |
+| t7         | BASE TABLE | MyISAM |
+| t3         | BASE TABLE | MyISAM |
+| t2         | BASE TABLE | MyISAM |
+| t          | BASE TABLE | MyISAM |
+| pk         | BASE TABLE | InnoDB |
+| loop       | BASE TABLE | MyISAM |
+| kurs       | BASE TABLE | MyISAM |
+| k          | BASE TABLE | MyISAM |
+| into       | BASE TABLE | MyISAM |
+| goto       | BASE TABLE | MyISAM |
+| fk2        | BASE TABLE | InnoDB |
+| fk         | BASE TABLE | InnoDB |
++------------+------------+--------+
+17 rows in set (0.01 sec)
+</pre><p>
+    Explanation: The statement requests a list of all the tables in
+    database <code class="literal">db5</code>, in reverse alphabetical order,
+    showing just three pieces of information: the name of the table, its
+    type, and its storage engine.
+  </p><p>
+    Each MySQL user has the right to access these tables, but can see
+    only the rows in the tables that correspond to objects for which the
+    user has the proper access privileges. In some cases (for example,
+    the <code class="literal">ROUTINE_DEFINITION</code> column in the
+    <code class="literal">INFORMATION_SCHEMA.ROUTINES</code> table), users who
+    have insufficient privileges will see <code class="literal">NULL</code>.
+  </p><p>
+    The <code class="literal">SELECT ... FROM INFORMATION_SCHEMA</code> statement
+    is intended as a more consistent way to provide access to the
+    information provided by the various <code class="literal">SHOW</code>
+    statements that MySQL supports (<code class="literal">SHOW DATABASES</code>,
+    <code class="literal">SHOW TABLES</code>, and so forth). Using
+    <code class="literal">SELECT</code> has these advantages, compared to
+    <code class="literal">SHOW</code>:
+  </p><div class="itemizedlist"><ul type="disc"><li><p>
+        It conforms to Codd's rules. That is, all access is done on
+        tables.
+      </p></li><li><p>
+        Nobody needs to learn a new statement syntax. Because they
+        already know how <code class="literal">SELECT</code> works, they only need
+        to learn the object names.
+      </p></li><li><p>
+        The implementor need not worry about adding keywords.
+      </p></li><li><p>
+        There are millions of possible output variations, instead of
+        just one. This provides more flexibility for applications that
+        have varying requirements about what metadata they need.
+      </p></li><li><p>
+        Migration is easier because every other DBMS does it this way.
+      </p></li></ul></div><p>
+    However, because <code class="literal">SHOW</code> is popular with MySQL
+    employees and users, and because it might be confusing were it to
+    disappear, the advantages of conventional syntax are not a
+    sufficient reason to eliminate <code class="literal">SHOW</code>. In fact,
+    along with the implementation of
+    <code class="literal">INFORMATION_SCHEMA</code>, there are enhancements to
+    <code class="literal">SHOW</code> as well. These are described in
+    <a href="information-schema.html#extended-show" title="21.19. Extensions to SHOW Statements">Section 21.19, “Extensions to <code class="literal">SHOW</code> Statements”</a>.
+  </p><p>
+    There is no difference between the privileges required for
+    <code class="literal">SHOW</code> statements and those required to select
+    information from <code class="literal">INFORMATION_SCHEMA</code>. In either
+    case, you have to have some privilege on an object in order to see
+    information about it.
+  </p><p>
+    The implementation for the <code class="literal">INFORMATION_SCHEMA</code>
+    table structures in MySQL follows the ANSI/ISO SQL:2003 standard
+    Part 11 <em class="citetitle">Schemata</em>. Our intent is approximate
+    compliance with SQL:2003 core feature F021 <em class="citetitle">Basic
+    information schema</em>.
+  </p><p>
+    Users of SQL Server 2000 (which also follows the standard) may
+    notice a strong similarity. However, MySQL has omitted many columns
+    that are not relevant for our implementation, and added columns that
+    are MySQL-specific. One such column is the <code class="literal">ENGINE</code>
+    column in the <code class="literal">INFORMATION_SCHEMA.TABLES</code> table.
+  </p><p>
+    Although other DBMSs use a variety of names, like
+    <code class="literal">syscat</code> or <code class="literal">system</code>, the standard
+    name is <code class="literal">INFORMATION_SCHEMA</code>.
+  </p><p>
+    The following sections describe each of the tables and columns that
+    are in <code class="literal">INFORMATION_SCHEMA</code>. For each column, there
+    are three pieces of information:
+  </p><div class="itemizedlist"><ul type="disc"><li><p>
+        “<span class="quote"><code class="literal">INFORMATION_SCHEMA</code> Name</span>”
+        indicates the name for the column in the
+        <code class="literal">INFORMATION_SCHEMA</code> table. This corresponds to
+        the standard SQL name unless the “<span class="quote">Remarks</span>” field
+        says “<span class="quote">MySQL extension.</span>”
+      </p></li><li><p>
+        “<span class="quote"><code class="literal">SHOW</code> Name</span>” indicates the
+        equivalent field name in the closest <code class="literal">SHOW</code>
+        statement, if there is one.
+      </p></li><li><p>
+        “<span class="quote">Remarks</span>” provides additional information where
+        applicable. If this field is <code class="literal">NULL</code>, it means
+        that the value of the column is always <code class="literal">NULL</code>.
+        If this field says “<span class="quote">MySQL extension,</span>” the column is
+        a MySQL extension to standard SQL.
+
+        
+      </p></li></ul></div><p>
+    To avoid using any name that is reserved in the standard or in DB2,
+    SQL Server, or Oracle, we changed the names of some columns marked
+    “<span class="quote">MySQL extension</span>”. (For example, we changed
+    <code class="literal">COLLATION</code> to <code class="literal">TABLE_COLLATION</code>
+    in the <code class="literal">TABLES</code> table.) See the list of reserved
+    words near the end of this article:
+    <a href="http://web.archive.org/web/20030201202307/www.dbazine.com/gulutzan5.html" target="_top">http://web.archive.org/web/20030201202307/www.dbazine.com/gulutzan5.html</a>.
+  </p><p>
+    The definition for character columns (for example,
+    <code class="literal">TABLES.TABLE_NAME</code>) is generally
+    <code class="literal">VARCHAR(<em class="replaceable"><code>N</code></em>) CHARACTER SET
+    utf8</code> where <em class="replaceable"><code>N</code></em> is at least 64.
+    MySQL uses the default collation for this character set
+    (<code class="literal">utf8_general_ci</code>) for all searches, sorts,
+    comparisons, and other string operations on such columns. If the
+    default collation is not correct for your needs, you can force a
+    suitable collation with a <code class="literal">COLLATE</code> clause
+    (<a href="internationalization-localization.html#charset-collate" title="9.1.5.1. Using COLLATE in SQL Statements">Section 9.1.5.1, “Using <code class="literal">COLLATE</code> in SQL Statements”</a>).
+  </p><p>
+    Each section indicates what <code class="literal">SHOW</code> statement is
+    equivalent to a <code class="literal">SELECT</code> that retrieves information
+    from <code class="literal">INFORMATION_SCHEMA</code>, if there is such a
+    statement.
+  </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+      At present, there are some missing columns and some columns out of
+      order. We are working on this and updating the documentation as
+      changes are made.
+    </p></div><p>
+    For answers to questions that are often asked concerning the
+    <code class="literal">INFORMATION_SCHEMA</code> database, see
+    <a href="faqs.html#faqs-information-schema" title="A.7. MySQL 5.0 FAQ — INFORMATION_SCHEMA">Section A.7, “MySQL 5.0 FAQ — <code class="literal">INFORMATION_SCHEMA</code>”</a>.
+  </p><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="schemata-table"></a>21.1. The <code class="literal">INFORMATION_SCHEMA SCHEMATA</code> Table</h2></div></div></div><a class="indexterm" name="id4513003"></a><p>
+      A schema is a database, so the <code class="literal">SCHEMATA</code> table
+      provides information about databases.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">CATALOG_NAME</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">SCHEMA_NAME</code></td><td> </td><td>Database</td></tr><tr><td><code class="literal">DEFAULT_CHARACTER_SET_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">DEFAULT_COLLATION_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">SQL_PATH</code></td><td> </td><td><code class="literal">NULL</code></td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          <code class="literal">DEFAULT_COLLATION_NAME</code> was added in MySQL
+          5.0.6.
+        </p></li></ul></div><p>
+      The following statements are equivalent:
+    </p><pre class="programlisting">SELECT SCHEMA_NAME AS `Database`
+  FROM INFORMATION_SCHEMA.SCHEMATA
+  [WHERE SCHEMA_NAME LIKE '<em class="replaceable"><code>wild</code></em>']
+
+SHOW DATABASES
+  [LIKE '<em class="replaceable"><code>wild</code></em>']
+</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="tables-table"></a>21.2. The <code class="literal">INFORMATION_SCHEMA TABLES</code> Table</h2></div></div></div><a class="indexterm" name="id4513222"></a><p>
+      The <code class="literal">TABLES</code> table provides information about
+      tables in databases.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">TABLE_CATALOG</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">TABLE_SCHEMA</code></td><td><code class="literal">Table_</code>...</td><td> </td></tr><tr><td><code class="literal">TABLE_NAME</code></td><td><code class="literal">Table_</code>...</td><td> </td></tr><tr><td><code class="literal">TABLE_TYPE</code></td><td> </td><td> </td></tr><tr><td><code class="literal">ENGINE</code></td><td><code class="literal">Engine</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">VERSION</code></td><td><code class="literal">Version</code></td><td>The version number of the table's <code class="filename">.frm</code> file, MySQL
+              extension</td></tr><tr><td><code class="literal">ROW_FORMAT</code></td><td><code class="literal">Row_format</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">TABLE_ROWS</code></td><td><code class="literal">Rows</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">AVG_ROW_LENGTH</code></td><td><code class="literal">Avg_row_length</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">DATA_LENGTH</code></td><td><code class="literal">Data_length</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">MAX_DATA_LENGTH</code></td><td><code class="literal">Max_data_length</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">INDEX_LENGTH</code></td><td><code class="literal">Index_length</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">DATA_FREE</code></td><td><code class="literal">Data_free</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">AUTO_INCREMENT</code></td><td><code class="literal">Auto_increment</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">CREATE_TIME</code></td><td><code class="literal">Create_time</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">UPDATE_TIME</code></td><td><code class="literal">Update_time</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">CHECK_TIME</code></td><td><code class="literal">Check_time</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">TABLE_COLLATION</code></td><td><code class="literal">Collation</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">CHECKSUM</code></td><td><code class="literal">Checksum</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">CREATE_OPTIONS</code></td><td><code class="literal">Create_options</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">TABLE_COMMENT</code></td><td><code class="literal">Comment</code></td><td>MySQL extension</td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          <code class="literal">TABLE_SCHEMA</code> and
+          <code class="literal">TABLE_NAME</code> are a single field in a
+          <code class="literal">SHOW</code> display, for example
+          <code class="literal">Table_in_db1</code>.
+        </p></li><li><p>
+          <code class="literal">TABLE_TYPE</code> should be <code class="literal">BASE
+          TABLE</code> or <code class="literal">VIEW</code>. If table is
+          temporary, then <code class="literal">TABLE_TYPE</code> =
+          <code class="literal">TEMPORARY</code>. (There are no temporary views,
+          so this is not ambiguous.)
+        </p></li><li><p>
+          The <code class="literal">TABLE_ROWS</code> column is
+          <code class="literal">NULL</code> if the table is in the
+          <code class="literal">INFORMATION_SCHEMA</code> database. For
+          <code class="literal">InnoDB</code> tables, the row count is only a
+          rough estimate used in SQL optimization.
+        </p></li><li><p>
+          We have nothing for the table's default character set.
+          <code class="literal">TABLE_COLLATION</code> is close, because collation
+          names begin with a character set name.
+        </p></li></ul></div><p>
+      The following statements are equivalent:
+    </p><pre class="programlisting">SELECT table_name FROM INFORMATION_SCHEMA.TABLES
+  [WHERE table_schema = '<em class="replaceable"><code>db_name</code></em>']
+  [WHERE|AND table_name LIKE '<em class="replaceable"><code>wild</code></em>']
+
+SHOW TABLES
+  [FROM <em class="replaceable"><code>db_name</code></em>]
+  [LIKE '<em class="replaceable"><code>wild</code></em>']
+</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="columns-table"></a>21.3. The <code class="literal">INFORMATION_SCHEMA COLUMNS</code> Table</h2></div></div></div><a class="indexterm" name="id4513898"></a><p>
+      The <code class="literal">COLUMNS</code> table provides information about
+      columns in tables.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">TABLE_CATALOG</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">TABLE_SCHEMA</code></td><td> </td><td> </td></tr><tr><td><code class="literal">TABLE_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">COLUMN_NAME</code></td><td><code class="literal">Field</code></td><td> </td></tr><tr><td><code class="literal">ORDINAL_POSITION</code></td><td> </td><td>see notes</td></tr><tr><td><code class="literal">COLUMN_DEFAULT</code></td><td><code class="literal">Default</code></td><td> </td></tr><tr><td><code class="literal">IS_NULLABLE</code></td><td><code class="literal">Null</code></td><td> </td></tr><tr><td><code class="literal">DATA_TYPE</code></td><td><code class="literal">Type</code></td><td> </td></tr><tr><td><code class="literal">CHARACTER_MAXIMUM_LENGTH</code></td><td><code class="literal">Type</code></td><td> </td></tr><tr><td><code class="literal">CHARACTER_OCTET_LENGTH</code></td><td> </td><td> </td></tr><tr><td><code class="literal">NUMERIC_PRECISION</code></td><td><code class="literal">Type</code></td><td> </td></tr><tr><td><code class="literal">NUMERIC_SCALE</code></td><td><code class="literal">Type</code></td><td> </td></tr><tr><td><code class="literal">CHARACTER_SET_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">COLLATION_NAME</code></td><td><code class="literal">Collation</code></td><td> </td></tr><tr><td><code class="literal">COLUMN_TYPE</code></td><td><code class="literal">Type</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">COLUMN_KEY</code></td><td><code class="literal">Key</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">EXTRA</code></td><td><code class="literal">Extra</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">COLUMN_COMMENT</code></td><td><code class="literal">Comment</code></td><td>MySQL extension</td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          In <code class="literal">SHOW</code>, the <code class="literal">Type</code>
+          display includes values from several different
+          <code class="literal">COLUMNS</code> columns.
+        </p></li><li><p>
+          <code class="literal">ORDINAL_POSITION</code> is necessary because you
+          might want to say <code class="literal">ORDER BY
+          ORDINAL_POSITION</code>. Unlike <code class="literal">SHOW</code>,
+          <code class="literal">SELECT</code> does not have automatic ordering.
+        </p></li><li><p>
+          <code class="literal">CHARACTER_OCTET_LENGTH</code> should be the same
+          as <code class="literal">CHARACTER_MAXIMUM_LENGTH</code>, except for
+          multi-byte character sets.
+        </p></li><li><p>
+          <code class="literal">CHARACTER_SET_NAME</code> can be derived from
+          <code class="literal">Collation</code>. For example, if you say
+          <code class="literal">SHOW FULL COLUMNS FROM t</code>, and you see in
+          the <code class="literal">Collation</code> column a value of
+          <code class="literal">latin1_swedish_ci</code>, the character set is
+          what's before the first underscore: <code class="literal">latin1</code>.
+        </p></li></ul></div><p>
+      The following statements are nearly equivalent:
+    </p><pre class="programlisting">SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE table_name = '<em class="replaceable"><code>tbl_name</code></em>'
+  [AND table_schema = '<em class="replaceable"><code>db_name</code></em>']
+  [AND column_name LIKE '<em class="replaceable"><code>wild</code></em>']
+
+SHOW COLUMNS
+  FROM <em class="replaceable"><code>tbl_name</code></em>
+  [FROM <em class="replaceable"><code>db_name</code></em>]
+  [LIKE '<em class="replaceable"><code>wild</code></em>']
+</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="statistics-table"></a>21.4. The <code class="literal">INFORMATION_SCHEMA STATISTICS</code> Table</h2></div></div></div><a class="indexterm" name="id4514480"></a><p>
+      The <code class="literal">STATISTICS</code> table provides information about
+      table indexes.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">TABLE_CATALOG</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">TABLE_SCHEMA</code></td><td> </td><td>= Database</td></tr><tr><td><code class="literal">TABLE_NAME</code></td><td><code class="literal">Table</code></td><td> </td></tr><tr><td><code class="literal">NON_UNIQUE</code></td><td><code class="literal">Non_unique</code></td><td> </td></tr><tr><td><code class="literal">INDEX_SCHEMA</code></td><td> </td><td>= Database</td></tr><tr><td><code class="literal">INDEX_NAME</code></td><td><code class="literal">Key_name</code></td><td> </td></tr><tr><td><code class="literal">SEQ_IN_INDEX</code></td><td><code class="literal">Seq_in_index</code></td><td> </td></tr><tr><td><code class="literal">COLUMN_NAME</code></td><td><code class="literal">Column_name</code></td><td> </td></tr><tr><td><code class="literal">COLLATION</code></td><td><code class="literal">Collation</code></td><td> </td></tr><tr><td><code class="literal">CARDINALITY</code></td><td><code class="literal">Cardinality</code></td><td> </td></tr><tr><td><code class="literal">SUB_PART</code></td><td><code class="literal">Sub_part</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">PACKED</code></td><td><code class="literal">Packed</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">NULLABLE</code></td><td><code class="literal">Null</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">INDEX_TYPE</code></td><td><code class="literal">Index_type</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">COMMENT</code></td><td><code class="literal">Comment</code></td><td>MySQL extension</td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          There is no standard table for indexes. The preceding list is
+          similar to what SQL Server 2000 returns for
+          <code class="literal">sp_statistics</code>, except that we replaced the
+          name <code class="literal">QUALIFIER</code> with
+          <code class="literal">CATALOG</code> and we replaced the name
+          <code class="literal">OWNER</code> with <code class="literal">SCHEMA</code>.
+        </p><p>
+          Clearly, the preceding table and the output from <code class="literal">SHOW
+          INDEX</code> are derived from the same parent. So the
+          correlation is already close.
+        </p></li></ul></div><p>
+      The following statements are equivalent:
+    </p><pre class="programlisting">SELECT * FROM INFORMATION_SCHEMA.STATISTICS
+  WHERE table_name = '<em class="replaceable"><code>tbl_name</code></em>'
+  [AND table_schema = '<em class="replaceable"><code>db_name</code></em>']
+
+SHOW INDEX
+  FROM <em class="replaceable"><code>tbl_name</code></em>
+  [FROM <em class="replaceable"><code>db_name</code></em>]
+</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="user-privileges-table"></a>21.5. The <code class="literal">INFORMATION_SCHEMA USER_PRIVILEGES</code> Table</h2></div></div></div><a class="indexterm" name="id4514945"></a><p>
+      The <code class="literal">USER_PRIVILEGES</code> table provides information
+      about global privileges. This information comes from the
+      <code class="literal">mysql.user</code> grant table.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">GRANTEE</code></td><td> </td><td><code class="literal">'<em class="replaceable"><code>user_name</code></em>'@'<em class="replaceable"><code>host_name</code></em>'</code>
+              value, MySQL extension</td></tr><tr><td><code class="literal">TABLE_CATALOG</code></td><td> </td><td><code class="literal">NULL</code>, MySQL extension</td></tr><tr><td><code class="literal">PRIVILEGE_TYPE</code></td><td> </td><td>MySQL extension</td></tr><tr><td><code class="literal">IS_GRANTABLE</code></td><td> </td><td>MySQL extension</td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          This is a non-standard table. It takes its values from the
+          <code class="literal">mysql.user</code> table.
+        </p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="schema-privileges-table"></a>21.6. The <code class="literal">INFORMATION_SCHEMA SCHEMA_PRIVILEGES</code> Table</h2></div></div></div><a class="indexterm" name="id4515149"></a><p>
+      The <code class="literal">SCHEMA_PRIVILEGES</code> table provides
+      information about schema (database) privileges. This information
+      comes from the <code class="literal">mysql.db</code> grant table.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">GRANTEE</code></td><td> </td><td><code class="literal">'<em class="replaceable"><code>user_name</code></em>'@'<em class="replaceable"><code>host_name</code></em>'</code>
+              value, MySQL extension</td></tr><tr><td><code class="literal">TABLE_CATALOG</code></td><td> </td><td><code class="literal">NULL</code>, MySQL extension</td></tr><tr><td><code class="literal">TABLE_SCHEMA</code></td><td> </td><td>MySQL extension</td></tr><tr><td><code class="literal">PRIVILEGE_TYPE</code></td><td> </td><td>MySQL extension</td></tr><tr><td><code class="literal">IS_GRANTABLE</code></td><td> </td><td>MySQL extension</td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          This is a non-standard table. It takes its values from the
+          <code class="literal">mysql.db</code> table.
+        </p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="table-privileges-table"></a>21.7. The <code class="literal">INFORMATION_SCHEMA TABLE_PRIVILEGES</code> Table</h2></div></div></div><a class="indexterm" name="id4515370"></a><p>
+      The <code class="literal">TABLE_PRIVILEGES</code> table provides information
+      about table privileges. This information comes from the
+      <code class="literal">mysql.tables_priv</code> grant table.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">GRANTEE</code></td><td> </td><td><code class="literal">'<em class="replaceable"><code>user_name</code></em>'@'<em class="replaceable"><code>host_name</code></em>'</code>
+              value</td></tr><tr><td><code class="literal">TABLE_CATALOG</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">TABLE_SCHEMA</code></td><td> </td><td> </td></tr><tr><td><code class="literal">TABLE_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">PRIVILEGE_TYPE</code></td><td> </td><td> </td></tr><tr><td><code class="literal">IS_GRANTABLE</code></td><td> </td><td> </td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          <code class="literal">PRIVILEGE_TYPE</code> can contain one (and only
+          one) of these values: <code class="literal">SELECT</code>,
+          <code class="literal">INSERT</code>, <code class="literal">UPDATE</code>,
+          <code class="literal">REFERENCES</code>, <code class="literal">ALTER</code>,
+          <code class="literal">INDEX</code>, <code class="literal">DROP</code>,
+          <code class="literal">CREATE VIEW</code>.
+        </p></li></ul></div><p>
+      The following statements are <span class="emphasis"><em>not</em></span> equivalent:
+    </p><pre class="programlisting">SELECT ... FROM INFORMATION_SCHEMA.TABLE_PRIVILEGES
+
+SHOW GRANTS ...
+</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="column-privileges-table"></a>21.8. The <code class="literal">INFORMATION_SCHEMA COLUMN_PRIVILEGES</code> Table</h2></div></div></div><a class="indexterm" name="id4515659"></a><p>
+      The <code class="literal">COLUMN_PRIVILEGES</code> table provides
+      information about column privileges. This information comes from
+      the <code class="literal">mysql.columns_priv</code> grant table.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">GRANTEE</code></td><td> </td><td><code class="literal">'<em class="replaceable"><code>user_name</code></em>'@'<em class="replaceable"><code>host_name</code></em>'</code>
+              value</td></tr><tr><td><code class="literal">TABLE_CATALOG</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">TABLE_SCHEMA</code></td><td> </td><td> </td></tr><tr><td><code class="literal">TABLE_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">COLUMN_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">PRIVILEGE_TYPE</code></td><td> </td><td> </td></tr><tr><td><code class="literal">IS_GRANTABLE</code></td><td> </td><td> </td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          In the output from <code class="literal">SHOW FULL COLUMNS</code>, the
+          privileges are all in one field and in lowercase, for example,
+          <code class="literal">select,insert,update,references</code>. In
+          <code class="literal">COLUMN_PRIVILEGES</code>, there is one privilege
+          per row, in uppercase.
+        </p></li><li><p>
+          <code class="literal">PRIVILEGE_TYPE</code> can contain one (and only
+          one) of these values: <code class="literal">SELECT</code>,
+          <code class="literal">INSERT</code>, <code class="literal">UPDATE</code>,
+          <code class="literal">REFERENCES</code>.
+        </p></li><li><p>
+          If the user has <code class="literal">GRANT OPTION</code> privilege,
+          <code class="literal">IS_GRANTABLE</code> should be
+          <code class="literal">YES</code>. Otherwise,
+          <code class="literal">IS_GRANTABLE</code> should be
+          <code class="literal">NO</code>. The output does not list <code class="literal">GRANT
+          OPTION</code> as a separate privilege.
+        </p></li></ul></div><p>
+      The following statements are <span class="emphasis"><em>not</em></span> equivalent:
+    </p><pre class="programlisting">SELECT ... FROM INFORMATION_SCHEMA.COLUMN_PRIVILEGES
+
+SHOW GRANTS ...
+</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="character-sets-table"></a>21.9. The <code class="literal">INFORMATION_SCHEMA CHARACTER_SETS</code> Table</h2></div></div></div><a class="indexterm" name="id4516008"></a><p>
+      The <code class="literal">CHARACTER_SETS</code> table provides information
+      about available character sets.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">CHARACTER_SET_NAME</code></td><td><code class="literal">Charset</code></td><td> </td></tr><tr><td><code class="literal">DEFAULT_COLLATE_NAME</code></td><td><code class="literal">Default collation</code></td><td> </td></tr><tr><td><code class="literal">DESCRIPION</code></td><td><code class="literal">Description</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">MAXLEN</code></td><td><code class="literal">Maxlen</code></td><td>MySQL extension</td></tr></tbody></table></div><p>
+      The following statements are equivalent:
+    </p><pre class="programlisting">SELECT * FROM INFORMATION_SCHEMA.CHARACTER_SETS
+  [WHERE name LIKE '<em class="replaceable"><code>wild</code></em>']
+
+SHOW CHARACTER SET
+  [LIKE '<em class="replaceable"><code>wild</code></em>']
+</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="collations-table"></a>21.10. The <code class="literal">INFORMATION_SCHEMA COLLATIONS</code> Table</h2></div></div></div><a class="indexterm" name="id4516198"></a><p>
+      The <code class="literal">COLLATIONS</code> table provides information about
+      collations for each character set.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">COLLATION_NAME</code></td><td><code class="literal">Collation</code></td><td> </td></tr><tr><td><code class="literal">CHARACTER_SET_NAME</code></td><td><code class="literal">Charset</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">ID</code></td><td><code class="literal">Id</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">IS_DEFAULT</code></td><td><code class="literal">Default</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">IS_COMPILED</code></td><td><code class="literal">Compiled</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">SORTLEN</code></td><td><code class="literal">Sortlen</code></td><td>MySQL extension</td></tr></tbody></table></div><p>
+      The following statements are equivalent:
+    </p><pre class="programlisting">SELECT COLLATION_NAME FROM INFORMATION_SCHEMA.COLLATIONS
+  [WHERE collation_name LIKE '<em class="replaceable"><code>wild</code></em>']
+
+SHOW COLLATION
+  [LIKE '<em class="replaceable"><code>wild</code></em>']
+</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="collation-character-set-applicability-table"></a>21.11. The <code class="literal">INFORMATION_SCHEMA
+      COLLATION_CHARACTER_SET_APPLICABILITY</code> Table</h2></div></div></div><a class="indexterm" name="id4516430"></a><p>
+      The <code class="literal">COLLATION_CHARACTER_SET_APPLICABILITY</code> table
+      indicates what character set is applicable for what collation. The
+      columns are equivalent to the first two display fields that we get
+      from <code class="literal">SHOW COLLATION</code>.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">COLLATION_NAME</code></td><td><code class="literal">Collation</code></td><td> </td></tr><tr><td><code class="literal">CHARACTER_SET_NAME</code></td><td><code class="literal">Charset</code></td><td> </td></tr></tbody></table></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="table-constraints-table"></a>21.12. The <code class="literal">INFORMATION_SCHEMA TABLE_CONSTRAINTS</code> Table</h2></div></div></div><a class="indexterm" name="id4516569"></a><p>
+      The <code class="literal">TABLE_CONSTRAINTS</code> table describes which
+      tables have constraints.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">CONSTRAINT_CATALOG</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">CONSTRAINT_SCHEMA</code></td><td> </td><td> </td></tr><tr><td><code class="literal">CONSTRAINT_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">TABLE_SCHEMA</code></td><td> </td><td> </td></tr><tr><td><code class="literal">TABLE_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">CONSTRAINT_TYPE</code></td><td> </td><td> </td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          The <code class="literal">CONSTRAINT_TYPE</code> value can be
+          <code class="literal">UNIQUE</code>, <code class="literal">PRIMARY KEY</code>, or
+          <code class="literal">FOREIGN KEY</code>.
+        </p></li><li><p>
+          The <code class="literal">UNIQUE</code> and <code class="literal">PRIMARY
+          KEY</code> information is about the same as what you get
+          from the <code class="literal">Key_name</code> field in the output from
+          <code class="literal">SHOW INDEX</code> when the
+          <code class="literal">Non_unique</code> field is <code class="literal">0</code>.
+        </p></li><li><p>
+          The <code class="literal">CONSTRAINT_TYPE</code> column can contain one
+          of these values: <code class="literal">UNIQUE</code>, <code class="literal">PRIMARY
+          KEY</code>, <code class="literal">FOREIGN KEY</code>,
+          <code class="literal">CHECK</code>. This is a <code class="literal">CHAR</code>
+          (not <code class="literal">ENUM</code>) column. The
+          <code class="literal">CHECK</code> value is not available until we
+          support <code class="literal">CHECK</code>.
+        </p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="key-column-usage-table"></a>21.13. The <code class="literal">INFORMATION_SCHEMA KEY_COLUMN_USAGE</code> Table</h2></div></div></div><a class="indexterm" name="id4516900"></a><p>
+      The <code class="literal">KEY_COLUMN_USAGE</code> table describes which key
+      columns have constraints.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">CONSTRAINT_CATALOG</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">CONSTRAINT_SCHEMA</code></td><td> </td><td> </td></tr><tr><td><code class="literal">CONSTRAINT_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">TABLE_CATALOG</code></td><td> </td><td> </td></tr><tr><td><code class="literal">TABLE_SCHEMA</code></td><td> </td><td> </td></tr><tr><td><code class="literal">TABLE_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">COLUMN_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">ORDINAL_POSITION</code></td><td> </td><td> </td></tr><tr><td><code class="literal">POSITION_IN_UNIQUE_CONSTRAINT</code></td><td> </td><td> </td></tr><tr><td><code class="literal">REFERENCED_TABLE_SCHEMA</code></td><td> </td><td> </td></tr><tr><td><code class="literal">REFERENCED_TABLE_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">REFERENCED_COLUMN_NAME</code></td><td> </td><td> </td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          If the constraint is a foreign key, then this is the column of
+          the foreign key, not the column that the foreign key
+          references.
+        </p></li><li><p>
+          The value of <code class="literal">ORDINAL_POSITION</code> is the
+          column's position within the constraint, not the column's
+          position within the table. Column positions are numbered
+          beginning with 1.
+        </p></li><li><p>
+          The value of <code class="literal">POSITION_IN_UNIQUE_CONSTRAINT</code>
+          is <code class="literal">NULL</code> for unique and primary-key
+          constraints. For foreign-key constraints, it is the ordinal
+          position in key of the table that is being referenced.
+        </p><p>
+          For example, suppose that there are two tables name
+          <code class="literal">t1</code> and <code class="literal">t3</code> that have the
+          following definitions:
+        </p><pre class="programlisting">CREATE TABLE t1
+(
+    s1 INT,
+    s2 INT,
+    s3 INT,
+    PRIMARY KEY(s3)
+) ENGINE=InnoDB;
+
+CREATE TABLE t3
+(
+    s1 INT,
+    s2 INT,
+    s3 INT,
+    KEY(s1),
+    CONSTRAINT CO FOREIGN KEY (s2) REFERENCES t1(s3)
+) ENGINE=InnoDB;
+</pre><p>
+          For those two tables, the <code class="literal">KEY_COLUMN_USAGE</code>
+          table has two rows:
+        </p><div class="itemizedlist"><ul type="circle"><li><p>
+              One row with <code class="literal">CONSTRAINT_NAME</code> =
+              <code class="literal">'PRIMARY'</code>,
+              <code class="literal">TABLE_NAME</code> = <code class="literal">'t1'</code>,
+              <code class="literal">COLUMN_NAME</code> = <code class="literal">'s3'</code>,
+              <code class="literal">ORDINAL_POSITION</code> =
+              <code class="literal">1</code>,
+              <code class="literal">POSITION_IN_UNIQUE_CONSTRAINT</code> =
+              <code class="literal">NULL</code>.
+            </p></li><li><p>
+              One row with <code class="literal">CONSTRAINT_NAME</code> =
+              <code class="literal">'CO'</code>, <code class="literal">TABLE_NAME</code> =
+              <code class="literal">'t3'</code>, <code class="literal">COLUMN_NAME</code> =
+              <code class="literal">'s2'</code>,
+              <code class="literal">ORDINAL_POSITION</code> =
+              <code class="literal">1</code>,
+              <code class="literal">POSITION_IN_UNIQUE_CONSTRAINT</code> =
+              <code class="literal">1</code>.
+            </p></li></ul></div></li><li><p>
+          <code class="literal">REFERENCED_TABLE_SCHEMA</code>,
+          <code class="literal">REFERENCED_TABLE_NAME</code>, and
+          <code class="literal">REFERENCED_COLUMN_NAME</code> were added in MySQL
+          5.0.6.
+        </p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="routines-table"></a>21.14. The <code class="literal">INFORMATION_SCHEMA ROUTINES</code> Table</h2></div></div></div><a class="indexterm" name="id4517418"></a><p>
+      The <code class="literal">ROUTINES</code> table provides information about
+      stored routines (both procedures and functions). The
+      <code class="literal">ROUTINES</code> table does not include user-defined
+      functions (UDFs) at this time.
+    </p><p>
+      The column named “<span class="quote"><code class="literal">mysql.proc</code> name</span>”
+      indicates the <code class="literal">mysql.proc</code> table column that
+      corresponds to the <code class="literal">INFORMATION_SCHEMA.ROUTINES</code>
+      table column, if any.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">mysql.proc</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">SPECIFIC_NAME</code></td><td><code class="literal">specific_name</code></td><td> </td></tr><tr><td><code class="literal">ROUTINE_CATALOG</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">ROUTINE_SCHEMA</code></td><td><code class="literal">db</code></td><td> </td></tr><tr><td><code class="literal">ROUTINE_NAME</code></td><td><code class="literal">name</code></td><td> </td></tr><tr><td><code class="literal">ROUTINE_TYPE</code></td><td><code class="literal">type</code></td><td><code class="literal">{PROCEDURE|FUNCTION}</code></td></tr><tr><td><code class="literal">DTD_IDENTIFIER</code></td><td> </td><td>data type descriptor</td></tr><tr><td><code class="literal">ROUTINE_BODY</code></td><td> </td><td><code class="literal">SQL</code></td></tr><tr><td><code class="literal">ROUTINE_DEFINITION</code></td><td><code class="literal">body</code></td><td> </td></tr><tr><td><code class="literal">EXTERNAL_NAME</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">EXTERNAL_LANGUAGE</code></td><td><code class="literal">language</code></td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">PARAMETER_STYLE</code></td><td> </td><td><code class="literal">SQL</code></td></tr><tr><td><code class="literal">IS_DETERMINISTIC</code></td><td><code class="literal">is_deterministic</code></td><td> </td></tr><tr><td><code class="literal">SQL_DATA_ACCESS</code></td><td><code class="literal">sql_data_access</code></td><td> </td></tr><tr><td><code class="literal">SQL_PATH</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">SECURITY_TYPE</code></td><td><code class="literal">security_type</code></td><td> </td></tr><tr><td><code class="literal">CREATED</code></td><td><code class="literal">created</code></td><td> </td></tr><tr><td><code class="literal">LAST_ALTERED</code></td><td><code class="literal">modified</code></td><td> </td></tr><tr><td><code class="literal">SQL_MODE</code></td><td><code class="literal">sql_mode</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">ROUTINE_COMMENT</code></td><td><code class="literal">comment</code></td><td>MySQL extension</td></tr><tr><td><code class="literal">DEFINER</code></td><td><code class="literal">definer</code></td><td>MySQL extension</td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          MySQL calculates <code class="literal">EXTERNAL_LANGUAGE</code> thus:
+        </p><div class="itemizedlist"><ul type="circle"><li><p>
+              If <code class="literal">mysql.proc.language='SQL'</code>,
+              <code class="literal">EXTERNAL_LANGUAGE</code> is
+              <code class="literal">NULL</code>
+            </p></li><li><p>
+              Otherwise, <code class="literal">EXTERNAL_LANGUAGE</code> is what is
+              in <code class="literal">mysql.proc.language</code>. However, we do
+              not have external languages yet, so it is always
+              <code class="literal">NULL</code>.
+            </p></li></ul></div></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="views-table"></a>21.15. The <code class="literal">INFORMATION_SCHEMA VIEWS</code> Table</h2></div></div></div><a class="indexterm" name="id4518011"></a><p>
+      The <code class="literal">VIEWS</code> table provides information about
+      views in databases. You must have the <code class="literal">SHOW VIEW</code>
+      privilege to access this table.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">TABLE_CATALOG</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">TABLE_SCHEMA</code></td><td> </td><td> </td></tr><tr><td><code class="literal">TABLE_NAME</code></td><td> </td><td> </td></tr><tr><td><code class="literal">VIEW_DEFINITION</code></td><td> </td><td> </td></tr><tr><td><code class="literal">CHECK_OPTION</code></td><td> </td><td> </td></tr><tr><td><code class="literal">IS_UPDATABLE</code></td><td> </td><td> </td></tr><tr><td><code class="literal">DEFINER</code></td><td> </td><td> </td></tr><tr><td><code class="literal">SECURITY_TYPE</code></td><td> </td><td> </td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          The <code class="literal">VIEW_DEFINITION</code> column has most of what
+          you see in the <code class="literal">Create Table</code> field that
+          <code class="literal">SHOW CREATE VIEW</code> produces. Skip the words
+          before <code class="literal">SELECT</code> and skip the words
+          <code class="literal">WITH CHECK OPTION</code>. Suppose that the
+          original statement was:
+        </p><pre class="programlisting">CREATE VIEW v AS
+  SELECT s2,s1 FROM t
+  WHERE s1 &gt; 5
+  ORDER BY s1
+  WITH CHECK OPTION;
+</pre><p>
+          Then the view definition looks like this:
+        </p><pre class="programlisting">SELECT s2,s1 FROM t WHERE s1 &gt; 5 ORDER BY s1
+</pre></li><li><p>
+          The <code class="literal">CHECK_OPTION</code> column always has a value
+          of <code class="literal">NONE</code>.
+        </p></li><li><p>
+          MySQL sets a flag, called the view updatability flag, at
+          <code class="literal">CREATE VIEW</code> time. The flag is set to
+          <code class="literal">YES</code> (true) if <code class="literal">UPDATE</code> and
+          <code class="literal">DELETE</code> (and similar operations) are legal
+          for the view. Otherwise, the flag is set to
+          <code class="literal">NO</code> (false). The
+          <code class="literal">IS_UPDATABLE</code> column in the
+          <code class="literal">VIEWS</code> table displays the status of this
+          flag. It means that the server always knows whether a view is
+          updatable. If the view is not updatable, statements such
+          <code class="literal">UPDATE</code>, <code class="literal">DELETE</code>, and
+          <code class="literal">INSERT</code> are illegal and will be rejected.
+          (Note that even if a view is updatable, it might not be
+          possible to insert into it; for details, refer to
+          <a href="views.html#create-view" title="20.2. CREATE VIEW Syntax">Section 20.2, “<code class="literal">CREATE VIEW</code> Syntax”</a>.)
+        </p></li><li><p>
+          The <code class="literal">DEFINER</code> and
+          <code class="literal">SECURITY_TYPE</code> columns were added in MySQL
+          5.0.14. <code class="literal">DEFINER</code> indicates who defined the
+          view. <code class="literal">SECURITY_TYPE</code> has a value of
+          <code class="literal">DEFINER</code> or <code class="literal">INVOKER</code>.
+        </p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="triggers-table"></a>21.16. The <code class="literal">INFORMATION_SCHEMA TRIGGERS</code> Table</h2></div></div></div><a class="indexterm" name="id4518434"></a><p>
+      The <code class="literal">TRIGGERS</code> table provides information about
+      triggers. You must have the <code class="literal">SUPER</code> privilege to
+      access this table.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">TRIGGER_CATALOG</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">TRIGGER_SCHEMA</code></td><td> </td><td> </td></tr><tr><td><code class="literal">TRIGGER_NAME</code></td><td><code class="literal">Trigger</code></td><td> </td></tr><tr><td><code class="literal">EVENT_MANIPULATION</code></td><td><code class="literal">Event</code></td><td> </td></tr><tr><td><code class="literal">EVENT_OBJECT_CATALOG</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">EVENT_OBJECT_SCHEMA</code></td><td> </td><td> </td></tr><tr><td><code class="literal">EVENT_OBJECT_TABLE</code></td><td><code class="literal">Table</code></td><td> </td></tr><tr><td><code class="literal">ACTION_ORDER</code></td><td> </td><td><code class="literal">0</code></td></tr><tr><td><code class="literal">ACTION_CONDITION</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">ACTION_STATEMENT</code></td><td><code class="literal">Statement</code></td><td> </td></tr><tr><td><code class="literal">ACTION_ORIENTATION</code></td><td> </td><td><code class="literal">ROW</code></td></tr><tr><td><code class="literal">ACTION_TIMING</code></td><td><code class="literal">Timing</code></td><td> </td></tr><tr><td><code class="literal">ACTION_REFERENCE_OLD_TABLE</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">ACTION_REFERENCE_NEW_TABLE</code></td><td> </td><td><code class="literal">NULL</code></td></tr><tr><td><code class="literal">ACTION_REFERENCE_OLD_ROW</code></td><td> </td><td><code class="literal">OLD</code></td></tr><tr><td><code class="literal">ACTION_REFERENCE_NEW_ROW</code></td><td> </td><td><code class="literal">NEW</code></td></tr><tr><td><code class="literal">CREATED</code></td><td> </td><td><code class="literal">NULL</code> (<code class="literal">0</code>)</td></tr><tr><td><code class="literal">SQL_MODE</code></td><td> </td><td>MySQL extension</td></tr><tr><td><code class="literal">DEFINER</code></td><td> </td><td>MySQL extension</td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          The <code class="literal">TRIGGERS</code> table was added in MySQL
+          5.0.10.
+        </p></li><li><p>
+          The <code class="literal">TRIGGER_SCHEMA</code> and
+          <code class="literal">TRIGGER_NAME</code> columns contain the name of
+          the database in which the trigger occurs and the trigger name,
+          respectively.
+        </p></li><li><p>
+          The <code class="literal">EVENT_MANIPULATION</code> column contains one
+          of the values <code class="literal">'INSERT'</code>,
+          <code class="literal">'DELETE'</code>, or <code class="literal">'UPDATE'</code>.
+        </p></li><li><p>
+          As noted in <a href="triggers.html" title="Chapter 19. Triggers">Chapter 19, <i>Triggers</i></a>, every trigger is
+          associated with exactly one table. The
+          <code class="literal">EVENT_OBJECT_SCHEMA</code> and
+          <code class="literal">EVENT_OBJECT_TABLE</code> columns contain the
+          database in which this table occurs, and the table's name.
+        </p></li><li><p>
+          The <code class="literal">ACTION_ORDER</code> statement contains the
+          ordinal position of the trigger's action within the list of
+          all similar triggers on the same table. Currently, this value
+          is always <code class="literal">0</code>, because it is not possible to
+          have more than one trigger with the same
+          <code class="literal">EVENT_MANIPULATION</code> and
+          <code class="literal">ACTION_TIMING</code> on the same table.
+        </p></li><li><p>
+          The <code class="literal">ACTION_STATEMENT</code> column contains the
+          statement to be executed when the trigger is invoked. This is
+          the same as the text displayed in the
+          <code class="literal">Statement</code> column of the output from
+          <code class="literal">SHOW TRIGGERS</code>. Note that this text uses
+          UTF-8 encoding.
+        </p></li><li><p>
+          The <code class="literal">ACTION_ORIENTATION</code> column always
+          contains the value <code class="literal">'ROW'</code>.
+        </p></li><li><p>
+          The <code class="literal">ACTION_TIMING</code> column contains one of
+          the two values <code class="literal">'BEFORE'</code> or
+          <code class="literal">'AFTER'</code>.
+        </p></li><li><p>
+          The columns <code class="literal">ACTION_REFERENCE_OLD_ROW</code> and
+          <code class="literal">ACTION_REFERENCE_NEW_ROW</code> contain the old
+          and new column identifiers, respectively. This means that
+          <code class="literal">ACTION_REFERENCE_OLD_ROW</code> always contains
+          the value <code class="literal">'OLD'</code> and
+          <code class="literal">ACTION_REFERENCE_NEW_ROW</code> always contains
+          the value <code class="literal">'NEW'</code>.
+        </p></li><li><p>
+          The <code class="literal">SQL_MODE</code> column shows the server SQL
+          mode that was in effect at the time when the trigger was
+          created (and thus which remains in effect for this trigger
+          whenever it is invoked, <span class="emphasis"><em>regardless of the current
+          server SQL mode</em></span>). The possible range of values for
+          this column is the same as that of the
+          <code class="literal">sql_mode</code> system variable. See
+          <a href="server-administration.html#server-sql-mode" title="5.1.6. SQL Modes">Section 5.1.6, “SQL Modes”</a>.
+        </p></li><li><p>
+          The <code class="literal">DEFINER</code> column was added in MySQL
+          5.0.17. <code class="literal">DEFINER</code> indicates who defined the
+          trigger.
+        </p></li><li><p>
+          The following columns currently always contain
+          <code class="literal">NULL</code>: <code class="literal">TRIGGER_CATALOG</code>,
+          <code class="literal">EVENT_OBJECT_CATALOG</code>,
+          <code class="literal">ACTION_CONDITION</code>,
+          <code class="literal">ACTION_REFERENCE_OLD_TABLE</code>,
+          <code class="literal">ACTION_REFERENCE_NEW_TABLE</code>, and
+          <code class="literal">CREATED</code>.
+        </p></li></ul></div><p>
+      Example, using the <code class="literal">ins_sum</code> trigger defined in
+      <a href="triggers.html#using-triggers" title="19.3. Using Triggers">Section 19.3, “Using Triggers”</a>:
+    </p><pre class="programlisting">mysql&gt; <strong class="userinput"><code>SELECT * FROM INFORMATION_SCHEMA.TRIGGERS\G</code></strong>
+*************************** 1. row ***************************
+           TRIGGER_CATALOG: NULL
+            TRIGGER_SCHEMA: test
+              TRIGGER_NAME: ins_sum
+        EVENT_MANIPULATION: INSERT
+      EVENT_OBJECT_CATALOG: NULL
+       EVENT_OBJECT_SCHEMA: test
+        EVENT_OBJECT_TABLE: account
+              ACTION_ORDER: 0
+          ACTION_CONDITION: NULL
+          ACTION_STATEMENT: SET @sum = @sum + NEW.amount
+        ACTION_ORIENTATION: ROW
+             ACTION_TIMING: BEFORE
+ACTION_REFERENCE_OLD_TABLE: NULL
+ACTION_REFERENCE_NEW_TABLE: NULL
+  ACTION_REFERENCE_OLD_ROW: OLD
+  ACTION_REFERENCE_NEW_ROW: NEW
+                   CREATED: NULL
+                  SQL_MODE:
+                   DEFINER: me@localhost
+</pre><p>
+      See also <a href="sql-syntax.html#show-triggers" title="12.5.4.26. SHOW TRIGGERS Syntax">Section 12.5.4.26, “<code class="literal">SHOW TRIGGERS</code> Syntax”</a>.
+    </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="profiling-table"></a>21.17. The <code class="literal">INFORMATION_SCHEMA PROFILING</code> Table</h2></div></div></div><p class="cs">This section does not apply to MySQL Enterprise Server users.</p><a class="indexterm" name="id4519293"></a><p>
+      The <code class="literal">PROFILING</code> table provides statement
+      profiling information. Its contents correspond to the information
+      produced by the <code class="literal">SHOW PROFILES</code> and <code class="literal">SHOW
+      PROFILE</code> statements (see
+      <a href="sql-syntax.html#show-profiles" title="12.5.4.22. SHOW PROFILES and SHOW PROFILE
+          Syntax">Section 12.5.4.22, “<code class="literal">SHOW PROFILES</code> and <code class="literal">SHOW PROFILE</code>
+          Syntax”</a>). The table is empty unless the
+      <code class="literal">profiling</code> session variable is set to 1.
+    </p><div class="informaltable"><table border="1"><colgroup><col><col><col></colgroup><tbody><tr><td><span class="bold"><strong><code class="literal">INFORMATION_SCHEMA</code>
+              Name</strong></span></td><td><span class="bold"><strong><code class="literal">SHOW</code> Name</strong></span></td><td><span class="bold"><strong>Remarks</strong></span></td></tr><tr><td><code class="literal">QUERY_ID</code></td><td><code class="literal">Query_ID</code></td><td> </td></tr><tr><td><code class="literal">SEQ</code></td><td><code class="literal"></code></td><td> </td></tr><tr><td><code class="literal">STATE</code></td><td><code class="literal">Status</code></td><td> </td></tr><tr><td><code class="literal">DURATION</code></td><td><code class="literal">Duration</code></td><td> </td></tr><tr><td><code class="literal">CPU_USER</code></td><td><code class="literal">CPU_user</code></td><td> </td></tr><tr><td><code class="literal">CPU_SYSTEM</code></td><td><code class="literal">CPU_system</code></td><td> </td></tr><tr><td><code class="literal">CONTEXT_VOLUNTARY</code></td><td><code class="literal">Context_voluntary</code></td><td> </td></tr><tr><td><code class="literal">CONTEXT_INVOLUNTARY</code></td><td><code class="literal">Context_involuntary</code></td><td> </td></tr><tr><td><code class="literal">BLOCK_OPS_IN</code></td><td><code class="literal">Block_ops_in</code></td><td> </td></tr><tr><td><code class="literal">BLOCK_OPS_OUT</code></td><td><code class="literal">Block_ops_out</code></td><td> </td></tr><tr><td><code class="literal">MESSAGES_SENT</code></td><td><code class="literal">Messages_sent</code></td><td> </td></tr><tr><td><code class="literal">MESSAGES_RECEIVED</code></td><td><code class="literal">Messages_received</code></td><td> </td></tr><tr><td><code class="literal">PAGE_FAULTS_MAJOR</code></td><td><code class="literal">Page_faults_major</code></td><td> </td></tr><tr><td><code class="literal">PAGE_FAULTS_MINOR</code></td><td><code class="literal">Page_faults_minor</code></td><td> </td></tr><tr><td><code class="literal">SWAPS</code></td><td><code class="literal">Swaps</code></td><td> </td></tr><tr><td><code class="literal">SOURCE_FUNCTION</code></td><td><code class="literal">Source_function</code></td><td> </td></tr><tr><td><code class="literal">SOURCE_FILE</code></td><td><code class="literal">Source_file</code></td><td> </td></tr><tr><td><code class="literal">SOURCE_LINE</code></td><td><code class="literal">Source_line</code></td><td> </td></tr></tbody></table></div><p>
+      <span class="bold"><strong>Notes</strong></span>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          The <code class="literal">PROFILING</code> table was added in MySQL
+          5.0.37.
+        </p></li><li><p>
+          <code class="literal">QUERY_ID</code> is a numeric statement identifier.
+        </p></li><li><p>
+          <code class="literal">SEQ</code> is a sequence number indicating the
+          display order for rows with the same
+          <code class="literal">QUERY_ID</code> value.
+        </p></li><li><p>
+          <code class="literal">STATE</code> is the profiling state to which the
+          row measurements apply.
+        </p></li><li><p>
+          <code class="literal">DURATION</code> indicates how long statement
+          execution remained in the given state, in seconds.
+        </p></li><li><p>
+          <code class="literal">CPU_USER</code> and <code class="literal">CPU_SYSTEM</code>
+          indicate user and system CPU use, in seconds.
+        </p></li><li><p>
+          <code class="literal">CONTEXT_VOLUNTARY</code> and
+          <code class="literal">CONTEXT_INVOLUNTARY</code> indicate how many
+          voluntary and involuntary context switches occurred.
+        </p></li><li><p>
+          <code class="literal">BLOCK_OPS_IN</code> and
+          <code class="literal">BLOCK_OPS_OUT</code> indicate the number of block
+          input and output operations.
+        </p></li><li><p>
+          <code class="literal">MESSAGES_SENT</code> and
+          <code class="literal">MESSAGES_RECEIVED</code> indicate the number of
+          communication messages sent and received.
+        </p></li><li><p>
+          <code class="literal">PAGE_FAULTS_MAJOR</code> and
+          <code class="literal">PAGE_FAULTS_MINOR</code> indicate the number of
+          major and minor page faults.
+        </p></li><li><p>
+          <code class="literal">SWAPS</code> indicates how many swaps occurred.
+        </p></li><li><p>
+          <code class="literal">SOURCE_FUNCTION</code>,
+          <code class="literal">SOURCE_FILE</code>, and
+          <code class="literal">SOURCE_LINE</code> provide information indicating
+          where in the source code the profiled state executes.
+        </p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="other-information-schema-tables"></a>21.18. Other <code class="literal">INFORMATION_SCHEMA</code> Tables</h2></div></div></div><p>
+      We intend to implement additional
+      <code class="literal">INFORMATION_SCHEMA</code> tables. In particular, we
+      acknowledge the need for the <code class="literal">PARAMETERS</code> and
+      <code class="literal">REFERENTIAL_CONSTRAINTS</code> tables.
+      (<code class="literal">REFERENTIAL_CONSTRAINTS</code> is implemented in
+      MySQL 5.1, and <code class="literal">PARAMETERS</code> is implemented in
+      MySQL 6.0.)
+    </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="extended-show"></a>21.19. Extensions to <code class="literal">SHOW</code> Statements</h2></div></div></div><a class="indexterm" name="id4520015"></a><a class="indexterm" name="id4520024"></a><a class="indexterm" name="id4520033"></a><p>
+      Some extensions to <code class="literal">SHOW</code> statements accompany
+      the implementation of <code class="literal">INFORMATION_SCHEMA</code>:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          <code class="literal">SHOW</code> can be used to get information about
+          the structure of <code class="literal">INFORMATION_SCHEMA</code> itself.
+        </p></li><li><p>
+          Several <code class="literal">SHOW</code> statements accept a
+          <code class="literal">WHERE</code> clause that provides more flexibility
+          in specifying which rows to display.
+        </p></li></ul></div><p>
+      These extensions are available beginning with MySQL 5.0.3.
+    </p><p>
+      <code class="literal">INFORMATION_SCHEMA</code> is an information database,
+      so its name is included in the output from <code class="literal">SHOW
+      DATABASES</code>. Similarly, <code class="literal">SHOW TABLES</code> can
+      be used with <code class="literal">INFORMATION_SCHEMA</code> to obtain a
+      list of its tables:
+    </p><pre class="programlisting">mysql&gt; <strong class="userinput"><code>SHOW TABLES FROM INFORMATION_SCHEMA;</code></strong>
++---------------------------------------+
+| Tables_in_information_schema          |
++---------------------------------------+
+| CHARACTER_SETS                        |
+| COLLATIONS                            |
+| COLLATION_CHARACTER_SET_APPLICABILITY |
+| COLUMNS                               |
+| COLUMN_PRIVILEGES                     |
+| KEY_COLUMN_USAGE                      |
+| ROUTINES                              |
+| SCHEMATA                              |
+| SCHEMA_PRIVILEGES                     |
+| STATISTICS                            |
+| TABLES                                |
+| TABLE_CONSTRAINTS                     |
+| TABLE_PRIVILEGES                      |
+| TRIGGERS                              |
+| USER_PRIVILEGES                       |
+| VIEWS                                 |
++---------------------------------------+
+16 rows in set (0.00 sec)
+</pre><p>
+      <code class="literal">SHOW COLUMNS</code> and <code class="literal">DESCRIBE</code>
+      can display information about the columns in individual
+      <code class="literal">INFORMATION_SCHEMA</code> tables.
+    </p><p>
+      <code class="literal">SHOW</code> statements that accept a
+      <a href="functions.html#operator_like"><code class="literal">LIKE</code></a> clause to limit the rows
+      displayed have been extended to allow a <code class="literal">WHERE</code>
+      clause that enables specification of more general conditions that
+      selected rows must satisfy:
+    </p><pre class="programlisting">SHOW CHARACTER SET
+SHOW COLLATION
+SHOW COLUMNS
+SHOW DATABASES
+SHOW FUNCTION STATUS
+SHOW INDEX
+SHOW OPEN TABLES
+SHOW PROCEDURE STATUS
+SHOW STATUS
+SHOW TABLE STATUS
+SHOW TABLES
+SHOW VARIABLES
+</pre><p>
+      The <code class="literal">WHERE</code> clause, if present, is evaluated
+      against the column names displayed by the <code class="literal">SHOW</code>
+      statement. For example, the <code class="literal">SHOW CHARACTER SET</code>
+      statement produces these output columns:
+    </p><pre class="programlisting">mysql&gt; <strong class="userinput"><code>SHOW CHARACTER SET;</code></strong>
++----------+-----------------------------+---------------------+--------+
+| Charset  | Description                 | Default collation   | Maxlen |
++----------+-----------------------------+---------------------+--------+
+| big5     | Big5 Traditional Chinese    | big5_chinese_ci     |      2 |
+| dec8     | DEC West European           | dec8_swedish_ci     |      1 |
+| cp850    | DOS West European           | cp850_general_ci    |      1 |
+| hp8      | HP West European            | hp8_english_ci      |      1 |
+| koi8r    | KOI8-R Relcom Russian       | koi8r_general_ci    |      1 |
+| latin1   | cp1252 West European        | latin1_swedish_ci   |      1 |
+| latin2   | ISO 8859-2 Central European | latin2_general_ci   |      1 |
+...
+</pre><p>
+      To use a <code class="literal">WHERE</code> clause with <code class="literal">SHOW
+      CHARACTER SET</code>, you would refer to those column names. As
+      an example, the following statement displays information about
+      character sets for which the default collation contains the string
+      <code class="literal">'japanese'</code>:
+    </p><pre class="programlisting">mysql&gt; <strong class="userinput"><code>SHOW CHARACTER SET WHERE `Default collation` LIKE '%japanese%';</code></strong>
++---------+---------------------------+---------------------+--------+
+| Charset | Description               | Default collation   | Maxlen |
++---------+---------------------------+---------------------+--------+
+| ujis    | EUC-JP Japanese           | ujis_japanese_ci    |      3 |
+| sjis    | Shift-JIS Japanese        | sjis_japanese_ci    |      2 |
+| cp932   | SJIS for Windows Japanese | cp932_japanese_ci   |      2 |
+| eucjpms | UJIS for Windows Japanese | eucjpms_japanese_ci |      3 |
++---------+---------------------------+---------------------+--------+
+</pre><p>
+      This statement displays the multi-byte character sets:
+    </p><pre class="programlisting">mysql&gt; <strong class="userinput"><code>SHOW CHARACTER SET WHERE Maxlen &gt; 1;</code></strong>
++---------+---------------------------+---------------------+--------+
+| Charset | Description               | Default collation   | Maxlen |
++---------+---------------------------+---------------------+--------+
+| big5    | Big5 Traditional Chinese  | big5_chinese_ci     |      2 |
+| ujis    | EUC-JP Japanese           | ujis_japanese_ci    |      3 |
+| sjis    | Shift-JIS Japanese        | sjis_japanese_ci    |      2 |
+| euckr   | EUC-KR Korean             | euckr_korean_ci     |      2 |
+| gb2312  | GB2312 Simplified Chinese | gb2312_chinese_ci   |      2 |
+| gbk     | GBK Simplified Chinese    | gbk_chinese_ci      |      2 |
+| utf8    | UTF-8 Unicode             | utf8_general_ci     |      3 |
+| ucs2    | UCS-2 Unicode             | ucs2_general_ci     |      2 |
+| cp932   | SJIS for Windows Japanese | cp932_japanese_ci   |      2 |
+| eucjpms | UJIS for Windows Japanese | eucjpms_japanese_ci |      3 |
++---------+---------------------------+---------------------+--------+
+</pre></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="views.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="precision-math.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 20. Views </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 22. Precision Math</td></tr></table></div></body></html>

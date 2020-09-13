@@ -1,0 +1,915 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html><head><title>SQL basics: Query multiple tables</title>
+
+                                
+   
+
+
+
+
+
+
+	
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<meta name="description" content="Whether you're learning SQL for the first time or just need a refresher, read this article to learn when to use SELECT, JOIN, subselects, and UNION to access multiple tables with a single statement.">
+	<meta name="keywords" content="Shelley Doll">
+
+	<style type="text/css" media="screen">
+    	@import url("http://i.techrepublic.com.com/css/tr2006.css");
+		@import url("http://i.techrepublic.com.com/css/tr_ws2006.css");
+		@import url("http://news.zdnet.com/css/z/ads/hs.css");
+		@import url("http://i.techrepublic.com.com/css/trArticle.css");
+	</style>
+	
+	<link rel="stylesheet" type="text/css" media="print" href="SQL%20basics%20Query%20Multiple%20Tables_files/trArticlePrint.css">
+	<link rel="SHORTCUT ICON" href="http://techrepublic.com.com/images/favicon.ico">
+	<script type="text/javascript" src="SQL%20basics%20Query%20Multiple%20Tables_files/articleScript.js"></script>
+	<script type="text/javascript">var dwInfo = "&oid=2100-10878_11-1050307&ptId=2100&onId=10878&sId=11&asId=1050307";</script><!-- MAC ad --><!-- NO AD TEXT: _QUERY_STRING="sp=80&pos=100" _REQ_NUM="0"  --><!-- default ad -->
+	<style type="text/css" media="screen">
+@import url("http://i.techrepublic.com.com/css/simplyHired.css");
+</style></head><body id="EyeBrow"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/dotclear_004.gif" alt="" style="position: absolute; top: 0px; left: 0px;" height="0" width="0"><!-- MAC [r20080402-1004-v1-13-9-FilterBugFix:1.13.9] c13-b2b-publish-web4.cnet.com::3975809968 2008.04.07.07.23.33 --><!-- MAC T 4.4.8.8 -->
+
+
+
+<div id="goiter">
+
+	<div id="width">
+<div id="eyebrowsBanner">
+		<div id="eyebrowsInner">
+			<!-- MAC ad --><div class="rubics_netxp1_main" id="rbx_netxp1_parent">
+<script type="text/javascript">
+function do_rbx_ctrk_netxp1 (aElem, iTrkId, cTrkPrefix) {
+	var imgElem = document.getElementById(iTrkId);
+	if (!imgElem) {
+		return true;
+	}
+
+	if (!aElem.rbxCPrefixed) {
+		aElem.rbxCPrefixed = true;
+		var destUri = encodeURIComponent(aElem.href);
+		var newUri = cTrkPrefix + destUri;
+		aElem.href = newUri;
+	}
+	return true;
+}
+function do_rbx_itrk_netxp1 (parentId, iTrkId, iTrkUri) {
+	if (!document.images) {
+		return false;
+	}
+
+	var imgId = iTrkId;
+	var imgElem = document.getElementById(imgId);
+
+	if (!imgElem) {
+
+		var parentElem = document.getElementById(parentId);
+		if (!parentElem) {
+			return false;
+		}
+
+		var imgElem = document.createElement('img');
+		if (!imgElem) {
+			return false;
+		}
+
+		imgElem.id = imgId;
+		imgElem.src = iTrkUri;
+		imgElem.alt = '';
+		imgElem.width = '1';
+		imgElem.height = '1';
+
+		parentElem.appendChild(imgElem);
+	}
+	return true;
+}
+</script>
+	On CNET: 
+	<a target="_top" onclick="return do_rbx_ctrk_netxp1(this, 'rbx_netxp1_1', 'http://dw.com.com/rubicsclk?ver=2&ts=2008.04.07.00.23.33&edId=87&onId=22&ptId=5100&sId=11&appId=19&offId=1684&unitId=45&poolId=1&f1=9&f2=%2d0&f3=%2d0&alg=8&&opt=1&linkPos=1&destUrl=');" href="http://reviews.cnet.com/lcd-monitors/dell-sp2208wfp/4505-3174_7-32909878.html" class="xpromolink">Dell monitor wins Editors' Choice</a>
+<script type="text/javascript">
+do_rbx_itrk_netxp1('rbx_netxp1_parent', 'rbx_netxp1_1', 'http://dw.com.com/rubicsimp/c.gif?ver=2&ts=2008.04.07.00.23.33&edId=87&onId=22&ptId=5100&sId=11&appId=19&unitId=45&poolId=1&f1=9&f2=%2d0&f3=%2d0&alg=8&opt=1&off=1684,-1');
+</script><img alt="" src="SQL%20basics%20Query%20Multiple%20Tables_files/c.gif" id="rbx_netxp1_1" height="1" width="1">
+</div>
+<!-- ros [r20070521-1832-ronr-v1-13-5:1.13.5] c17-ad-rubics-ros3.cnet.com::4005739440 2008.04.07.00.23.33 --><!-- ros t 0.0.0.1.4.5.5.5 --><!-- MAC [r20080402-1004-v1-13-9-FilterBugFix:1.13.9] c13-b2b-publish-web4.cnet.com::3975809968 2008.04.07.07.23.33 --><!-- MAC T 9.9.10.10 -->
+			<ul class="cnbLinks">
+				<li>BNET Business Network: </li>
+				<li><a href="http://www.bnet.com/">BNET</a> |</li>
+				<li><a href="http://techrepublic.com.com/">TechRepublic</a> |</li>
+				<li><a href="http://www.zdnet.com/">ZDNet</a></li>
+			</ul>
+		</div><!-- /eyebrowsInner -->
+	</div><!-- /eyebrowsBanner -->
+				<div id="masthead">
+		<a id="logo" href="http://techrepublic.com.com/"></a>
+
+		
+
+			<ul class="tool">
+				<li><a href="http://articles.techrepublic.com.com/5265-11518-0.html" class="blue">My Workspace</a>&nbsp;|&nbsp;<a href="http://nl.com.com/acct_mgmt.sc?brand=techrepublic" class="blue">My Newsletters</a></li>
+				 <li><a href="http://articles.techrepublic.com.com/1320-4-55.html?path=/5213-6257-0.html" class="orange normal">Log in</a>&nbsp;|&nbsp;<a href="http://articles.techrepublic.com.com/1301-4-55.html?path=/5213-6257-0.html" class="orange normal">Get a free membership</a></li>
+			</ul>
+
+		  
+		
+	</div><!-- /masthead -->
+
+
+<div id="main">
+	<ul id="headerNav">
+	   <li><a href="http://techrepublic.com.com/">Home</a></li>   
+	   <li><a href="http://blogs.techrepublic.com.com/">Blogs</a></li>
+	   <li><a href="http://downloads.techrepublic.com.com/">Downloads</a></li>
+	   <li><a href="http://techrepublic.com.com/5221-6230-0.html">Forums</a></li>
+       <li><a href="http://content.techrepublic.com.com/2350-1_11-0.html">Photos</a></li>
+	   <li><a href="http://video.techrepublic.com.com/2434-13789_11-167680.html">Videos</a></li>
+		<li><a href="http://webcasts.techrepublic.com.com/">Webcasts</a></li> 
+	   <li><a href="http://whitepapers.techrepublic.com.com/">White Papers</a></li>
+	   <li><a href="http://software.techrepublic.com.com/">Software</a></li>
+	   <li><a href="http://jobs.techrepublic.com.com/">Jobs</a></li>
+ 	   <li><a href="http://training.techrepublic.com.com/">Training</a></li>
+		
+		<li><a href="http://techrepublic.com.com/1393-6242-97.html">Store</a></li>
+   		 
+	</ul>
+	
+	<div id="topHTML">
+		<form action="http://search.techrepublic.com.com/index.php" method="get" name="tr_site_search" id="searchForm" class="articleForm">
+
+			<input id="searchInput" name="q" value="Search" onfocus="this.value=''" type="text">
+			<select id="searchList" name="t">
+										<option value="11">in Articles</option>
+		   							<option value="0">all of TechRepublic</option>
+			</select>
+			<input id="searchButton" name="go" value="Search" type="submit">
+			
+		</form>
+	</div><!--/topHTML-->
+
+	<div id="content" class="clearFix">
+		<div id="leftCol">
+			<div id="contentHeader">
+				<h1>SQL basics: Query multiple tables</h1>
+				<p class="byline">by <a href="http://search.techrepublic.com.com/search/Shelley%20Doll.html">Shelley Doll</a>&nbsp;|&nbsp;Aug 12, 2002 7:00:00 AM</p>
+
+							<p class="tags"><b>Tags:</b> 										<a href="http://search.techrepublic.com.com/search/Shelley%20Doll.html">Shelley Doll</a>									</p>
+			
+
+
+			                                                
+			
+			
+			
+						
+			
+				<div class="interact fadeBtmLeft clearFix">
+					<div class="cmntCount">
+					   <a href="#comments"><span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
+   	11
+  
+
+
+</span> comment(s)</a>
+					</div>
+					<ul class="toolbar">
+						
+
+
+<li class="share"><a title="Email this to a friend" href="javascript:usrActionReg(this,19);">Email</a></li>
+
+<li class="save"><a title="Save this to my Workspace" href="http://techrepublic.com.com/5262-6257-0.html?link=http%3A%2F%2Farticles.techrepublic.com.com%2F5100-22-1050307.html&amp;title=SQL+basics%3A+Query+multiple+tables&amp;path=http%3A%2F%2Farticles.techrepublic.com.com%2F5100-22-1050307.html">Save</a></li>
+		<li class="print"><a title="Printer-friendly version" href="javascript:usrActionReg(this,20);">Print</a></li>
+	<li class="digg"><a href="http://digg.com/submit?phase=2&amp;url=http://articles.techrepublic.com.com/5100-22_11-1050307.html&amp;title=SQL+basics%3A+Query+multiple+tables&amp;bodytext=Whether+you%27re+learning+SQL+for+the+first+time+or+just+need+a+refresher%2C+read+this+article+to+learn+when+to+use+SELECT%2C+JOIN%2C+subselects%2C+and+UNION+to+access+multiple+tables+with+a+single+statement.&amp;topic=tech_news" class="last">Digg This</a></li>
+						
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         <li class="recommend"><a href="http://articles.techrepublic.com.com/1320-4-55.html?path=http://articles.techrepublic.com.com/5100-10878_11-1050307.html" title="Click to recommend" class="last"></a></li>
+   
+   <li class="vote"><div id="votecount" class="votecount" title="How many people recommended this item">3 </div></li>
+
+<script language="JavaScript">
+        var http = createRequestObject();
+        var existing_votes = '';
+
+        function createRequestObject()
+        {
+            var ro;
+            var browser = navigator.appName;
+            if(browser == "Microsoft Internet Explorer"){
+                ro = new ActiveXObject("Microsoft.XMLHTTP");
+            }else{
+                ro = new XMLHttpRequest();
+            }
+            return ro;
+        }
+
+        function Set_Cookie(name, value, expires, path)
+        {
+            // set time, it's in milliseconds
+            var today = new Date();
+            today.setTime( today.getTime() );
+
+            expires = expires * 1000 * 60 * 60 * 24;
+            var expires_date = new Date( today.getTime() + (expires) );
+
+            document.cookie = name + "=" + escape( value ) +  ";expires=" + expires_date.toGMTString() + ";path=" + path;
+
+        }
+
+        function sendVote()
+        {
+            http.open('get', '');
+            http.onreadystatechange = handleResponse;
+            http.send(null);
+        }
+
+        function handleResponse()
+        {
+            if(http.readyState == 4)
+            {
+                var response = http.responseText;
+                var temp_array = new Array();
+                temp_array = response.split('~');
+                var ranking = temp_array[0];
+
+                if (ranking > 0) {
+                   ranking = ranking;
+                }
+
+				// Replace with ajax magic
+                document.getElementById('votecount').innerHTML = ranking;
+
+                // Remove the thumbs
+                var voter = document.getElementById('recommend');
+                voter.className = "thanks";
+                voter.innerHTML = "";
+
+                Set_Cookie('service',(existing_votes + '~74034'),30,'/');
+            }
+        }
+</script>
+
+
+					</ul><!-- /toolbar -->
+				</div><!-- /interact -->
+			</div><!-- /contentHeader -->
+
+			<div id="articleText">
+				<p class="takeaway"><b>Takeaway:</b>
+Whether you're learning SQL for the first time or just need a
+refresher, read this article to learn when to use SELECT, JOIN,
+subselects, and UNION to access multiple tables with a single statement.</p>
+
+				
+				<br>It&#8217;s
+sometimes difficult to know which SQL syntax to use when combining data
+that spans multiple tables. I&#8217;ll discuss some of the more frequently
+used methods for consolidating queries on multiple tables into a single
+statement.<br><hr size="1" width="100%"><font class="articleTipTitle">SQL syntax</font><br><font class="articleTipText">
+
+
+
+
+If you need a refresher on SQL syntax, read these articles:<br><a href="http://builder.com.com/article.jhtml?id=u00320020531dol01.htm">"SQL Basics I: Data queries"</a> covers database terminology and the four basic query types.<br><a href="http://builder.com.com/article.jhtml?id=u00320020628dol01.htm">"SQL basics: SELECT statement options"</a> covers the SELECT statement in detail and explains aggregate functions.
+
+
+</font><hr size="1" width="100%"><br>The sample queries in this article
+adhere to the SQL92 ISO standard. Not all database manufacturers follow
+this standard, and many have made enhancements that can yield
+unexpected results. If you&#8217;re uncertain about support for these
+concepts in your database, please refer to your manufacturer&#8217;s
+documentation.<br><br><span class="subhead1">SELECT</span><br>A simple
+SELECT statement is the most basic way to query multiple tables. You
+can call more than one table in the FROM clause to combine results from
+multiple tables. Here&#8217;s an example of how this works:<br><span class="code">SELECT table1.column1, table2.column2 FROM table1, table2 WHERE table1.column1 = table2.column1;</span><br><br>In this example, I used dot notation (<i>table1.column1</i>)
+to specify which table the column came from. If the column in question
+only appears in one of the referenced tables, you don&#8217;t need to include
+the fully qualified name, but it may be useful to do so for readability.<br><br>Tables
+are separated in the FROM clause by commas. You can include as many
+tables as needed, although some databases have a limit to what they can
+efficiently handle before introducing a formal JOIN statement, which is
+described below.<br><br>This syntax is, in effect, a simple INNER JOIN.
+Some databases treat it exactly the same as an explicit JOIN. The WHERE
+clause tells the database which fields to correlate, and it returns
+results as if the tables listed were combined into a single table based
+on the provided conditions. It&#8217;s worth noting that your conditions for
+comparison don&#8217;t have to be the same columns you return as your result
+set. In the example above, <i>table1.column1</i> and <i>table2.column1</i> are used to combine the tables, but <i>table2.column2</i> is returned.<br><br>You
+can extend this functionality to more than two tables using AND
+keywords in the WHERE clause. You can also use such a combination of
+tables to restrict your results without actually returning columns from
+every table. In the example below, <i>table3</i> is matched up with <i>table1</i>, but I haven&#8217;t returned anything from <i>table3</i> for display. I&#8217;ve merely checked to make sure the relevant column from <i>table1</i> exists in <i>table3</i>. Note that <i>table3</i> needs to be referenced in the FROM clause for this example.<br><span class="code">SELECT
+table1.column1, table2.column2 FROM table1, table2, table3 WHERE
+table1.column1 = table2.column1 AND table1.column1 = table3.column1;</span><br> <br>Be
+warned, however, that this method of querying multiple tables is
+effectively an implied JOIN. Your database may handle things
+differently, depending on the optimization engine it uses. Also,
+neglecting to define the nature of the correlation with a WHERE clause
+can give you undesirable results, such as returning the rogue field in
+a column associated with every possible result from the rest of the
+query, as in a CROSS JOIN.<br><br>If you&#8217;re comfortable with how your
+database handles this type of statement, and you&#8217;re combining two or
+just a few tables, a simple SELECT statement will meet your needs.<br><br><span class="subhead1">JOIN</span><br>JOIN
+works in the same way as the SELECT statement above&#8212;it returns a result
+set with columns from different tables. The advantage of using an
+explicit JOIN over an implied one is greater control over your result
+set, and possibly improved performance when many tables are involved.<br><br>There
+are several types of JOIN&#8212;LEFT, RIGHT, and FULL OUTER; INNER; and
+CROSS. The type you use is determined by the results you want to see.
+For example, using a LEFT OUTER JOIN will return all relevant rows from
+the first table listed, while potentially dropping rows from the second
+table listed if they don&#8217;t have information that correlates in the
+first table.<br><br>This differs from an INNER JOIN or an implied JOIN. An INNER JOIN will only return rows for which there is data in both tables.<br><br>Use the following JOIN statement for the first SELECT query above:<br><span class="code">SELECT table1.column1, table2.column2 FROM table1 INNER JOIN table2<br>
+ON table1.column1 = table2.column1;</span><br><br><span class="subhead1">Subqueries</span><br>Subqueries,
+or subselect statements, are a way to use a result set as a resource in
+a query. These are often used to limit or refine results rather than
+run multiple queries or manipulate the data in your application. With a
+subquery, you can reference tables to determine inclusion of data or,
+in some cases, return a column that is the result of a subselect.<br><br>The
+following example uses two tables. One table actually contains the data
+I&#8217;m interested in returning, while the other gives a comparison point
+to determine what data is actually interesting.<br><span class="code">SELECT column1 FROM table1 WHERE EXISTS ( SELECT column1 FROM table2 WHERE table1.column1 = table2.column1 );</span><br><br>One
+important factor about subqueries is performance. Convenience comes at
+a price and, depending on the size, number, and complexity of tables
+and the statements you use, you may want to allow your application to
+handle processing. Each query is processed separately in full before
+being used as a resource for your primary query. If possible, creative
+use of JOIN statements may provide the same information with less lag
+time.<br><hr size="1" width="100%"><font class="articleTipTitle">JOIN statements and subqueries</font><br><font class="articleTipText">
+
+
+
+
+<br>For a more detailed explanation of JOINS and concepts that can be used with them, read the articles &nbsp;<a href="http://builder.com.com/article.jhtml?id=u00320020702dol01.htm">"Basic and complex SQL joins made easy"</a> and <a href="http://builder.com.com/article.jhtml?id=u00320020710dol01.htm">"Master joins with these concepts."</a> For more information about subqueries, read <a href="http://builder.com.com/article.jhtml?id=u00320020703dol01.htm">"Use SQL subselects to consolidate queries."</a><br>
+
+
+</font><hr size="1" width="100%"> <br><span class="subhead1">UNION</span><br>The
+UNION statement is another way to return information from multiple
+tables with a single query. The UNION statement allows you to perform
+queries against several tables and return the results in a consolidated
+set, as in the following example.<br><span class="code">SELECT column1, column2, column3 FROM table1 UNION SELECT column1, column2, column3 FROM table2;</span><br><br>This
+will return a result set with three columns containing data from both
+queries. By default, the UNION statement will omit duplicates between
+the tables unless the UNION ALL keyword is used. UNION is helpful when
+the returned columns from the different tables don&#8217;t have columns or
+data that can be compared and joined, or when it prevents running
+multiple queries and appending the results in your application code.<br><br>If your column names don&#8217;t match when you use the UNION statement, use aliases to give your results meaningful headers:<br><span class="code">SELECT column1, column2 as Two, column3 as Three FROM table1 UNION SELECT column1, column4 as Two, column5 as Three FROM table2;</span><br><br>As
+with subqueries, UNION statements can create a heavy load on your
+database server, but for occasional use they can save a lot of time.<br><br><span class="subhead1">Multiple options</span><br>When
+it comes to database queries, there are usually many ways to approach
+the same problem. These are some of the more frequently used methods
+for consolidating queries on multiple tables into a single statement.
+While some of these options may affect performance, practice will help
+you know when it&#8217;s appropriate to use each type of query.<br><hr size="1" width="100%"><font class="articleTipTitle">What do you want to see?</font><br><font class="articleTipText">
+
+
+
+
+Let us know what SQL topics you&#8217;d like to see covered by posting in the discussion below or <a href="mailto:architect@builder.com?subject=SQL%20for%20multiple%20tables%20feedback">sending us an e-mail</a>.
+
+
+</font><hr size="1" width="100%"><br>&nbsp;<br>
+			</div><!-- /articleText -->
+			<div id="contentLower">	
+			<div class="interact fadeBtmLeft clearFix">
+				<div class="cmntCount">
+				   <a href="#comments"><span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
+   	11
+  
+
+
+</span> comment(s)</a>
+				</div>
+				<ul class="toolbar">
+					
+
+
+<li class="share"><a title="Email this to a friend" href="javascript:usrActionReg(this,19);">Email</a></li>
+
+<li class="save"><a title="Save this to my Workspace" href="http://techrepublic.com.com/5262-6257-0.html?link=http%3A%2F%2Farticles.techrepublic.com.com%2F5100-22-1050307.html&amp;title=SQL+basics%3A+Query+multiple+tables&amp;path=http%3A%2F%2Farticles.techrepublic.com.com%2F5100-22-1050307.html">Save</a></li>
+		<li class="print"><a title="Printer-friendly version" href="javascript:usrActionReg(this,20);">Print</a></li>
+	<li class="digg"><a href="http://digg.com/submit?phase=2&amp;url=http://articles.techrepublic.com.com/5100-22_11-1050307.html&amp;title=SQL+basics%3A+Query+multiple+tables&amp;bodytext=Whether+you%27re+learning+SQL+for+the+first+time+or+just+need+a+refresher%2C+read+this+article+to+learn+when+to+use+SELECT%2C+JOIN%2C+subselects%2C+and+UNION+to+access+multiple+tables+with+a+single+statement.&amp;topic=tech_news" class="last">Digg This</a></li>
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         <li class="recommend"><a href="http://articles.techrepublic.com.com/1320-4-55.html?path=http://articles.techrepublic.com.com/5100-10878_11-1050307.html" title="Click to recommend" class="last"></a></li>
+   
+   <li class="vote"><div id="votecount" class="votecount" title="How many people recommended this item">3 </div></li>
+
+<script language="JavaScript">
+        var http = createRequestObject();
+        var existing_votes = '';
+
+        function createRequestObject()
+        {
+            var ro;
+            var browser = navigator.appName;
+            if(browser == "Microsoft Internet Explorer"){
+                ro = new ActiveXObject("Microsoft.XMLHTTP");
+            }else{
+                ro = new XMLHttpRequest();
+            }
+            return ro;
+        }
+
+        function Set_Cookie(name, value, expires, path)
+        {
+            // set time, it's in milliseconds
+            var today = new Date();
+            today.setTime( today.getTime() );
+
+            expires = expires * 1000 * 60 * 60 * 24;
+            var expires_date = new Date( today.getTime() + (expires) );
+
+            document.cookie = name + "=" + escape( value ) +  ";expires=" + expires_date.toGMTString() + ";path=" + path;
+
+        }
+
+        function sendVote()
+        {
+            http.open('get', '');
+            http.onreadystatechange = handleResponse;
+            http.send(null);
+        }
+
+        function handleResponse()
+        {
+            if(http.readyState == 4)
+            {
+                var response = http.responseText;
+                var temp_array = new Array();
+                temp_array = response.split('~');
+                var ranking = temp_array[0];
+
+                if (ranking > 0) {
+                   ranking = ranking;
+                }
+
+				// Replace with ajax magic
+                document.getElementById('votecount').innerHTML = ranking;
+
+                // Remove the thumbs
+                var voter = document.getElementById('recommend');
+                voter.className = "thanks";
+                voter.innerHTML = "";
+
+                Set_Cookie('service',(existing_votes + '~74034'),30,'/');
+            }
+        }
+</script>
+
+
+				</ul><!-- /toolbar -->
+			</div><!-- /interact -->
+
+			   			<!--Medusa Related Content-->
+				        		        			<script type="text/javascript" src="SQL%20basics%20Query%20Multiple%20Tables_files/wi.asc"></script>
+                					<script type="text/javascript">getrelatedContent()</script><h2>People who read this, also read...</h2>
+<ul class="relatedContent">
+<li>
+<a href="http://articles.techrepublic.com.com/5100-22-1046273.html?tag=rbxccnbtr1">Basic and complex SQL joins made easy</a></li>
+<li>
+<a href="http://articles.techrepublic.com.com/5100-22-1044907.html?tag=rbxccnbtr1">SQL basics I: Data queries</a></li>
+<li>
+<a href="http://articles.techrepublic.com.com/5100-22-1045789.html?tag=rbxccnbtr1">Master joins with these concepts</a></li>
+<li>
+<a href="http://articles.techrepublic.com.com/5100-22-1045052.html?tag=rbxccnbtr1">Advanced SQL with joins</a></li>
+<li class="last">
+<a href="http://articles.techrepublic.com.com/5100-22-1044962.html?tag=rbxccnbtr1">SQL basics: SELECT statement options</a></li>
+</ul>
+<img src="SQL%20basics%20Query%20Multiple%20Tables_files/redir.gif" border="0" height="1" width="1">
+				
+			<!--/Medusa Related Content-->
+         			<!--talkback-->
+			<a name="comments"></a>
+
+						
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	
+
+
+<h2><span class="farRight">   
+   
+
+
+
+   <a rel="nofollow" href="http://articles.techrepublic.com.com/1320-4-55.html?path=5206-10878-0.html%3FforumID%3D10%26threadID%3D101931%26start%3D0">Print/View all Posts</a>
+   
+
+</span>Comments on this 
+article
+</h2><!--End of comment-->
+
+  <table border="0" cellpadding="0" cellspacing="0" width="100%">
+  <tbody>
+  <tr><td class="trcThreadOddRow" height="45"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeItem.gif" align="left" border="0" height="45" width="20"><span class="threadHed"><a href="http://articles.techrepublic.com.com/5208-10878-0.html?forumID=10&amp;threadID=101931&amp;messageID=611177">Sample data would help</a></span><span class="contentType">Passwordchanged &nbsp;|&nbsp;08/14/02</span></td></tr>
+
+
+
+<tr><td class="trcThreadEvenRow" height="45"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeSkipItem.gif" align="left" border="0" height="45" width="20"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeLastItem.gif" align="left" border="0" height="45" width="20"><span class="threadHed"><a href="http://articles.techrepublic.com.com/5208-10878-0.html?forumID=10&amp;threadID=101931&amp;messageID=611934">Sample Data</a></span><span class="contentType">shelleydoll &nbsp;|&nbsp;08/16/02</span></td></tr>
+
+
+
+<tr><td class="trcThreadOddRow" height="45"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeSkipItem.gif" align="left" border="0" height="45" width="20"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/spacer.gif" align="left" border="0" height="45" width="20"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeLastItem.gif" align="left" border="0" height="45" width="20"><span class="threadHed"><a href="http://articles.techrepublic.com.com/5208-10878-0.html?forumID=10&amp;threadID=101931&amp;messageID=627453">Thanks</a></span><span class="contentType">naveel@... &nbsp;|&nbsp;09/11/02</span></td></tr>
+
+
+
+<tr><td class="trcThreadEvenRow" height="45"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeItem.gif" align="left" border="0" height="45" width="20"><span class="threadHed"><a href="http://articles.techrepublic.com.com/5208-10878-0.html?forumID=10&amp;threadID=101931&amp;messageID=611949">UNION query gives dups</a></span><span class="contentType">M Hamil &nbsp;|&nbsp;08/16/02</span></td></tr>
+
+
+
+<tr><td class="trcThreadOddRow" height="45"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeSkipItem.gif" align="left" border="0" height="45" width="20"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeLastItem.gif" align="left" border="0" height="45" width="20"><span class="threadHed"><a href="http://articles.techrepublic.com.com/5208-10878-0.html?forumID=10&amp;threadID=101931&amp;messageID=612846">duplicates</a></span><span class="contentType">shelleydoll &nbsp;|&nbsp;08/18/02</span></td></tr>
+
+
+
+<tr><td class="trcThreadEvenRow" height="45"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeItem.gif" align="left" border="0" height="45" width="20"><span class="threadHed"><a href="http://articles.techrepublic.com.com/5208-10878-0.html?forumID=10&amp;threadID=101931&amp;messageID=632463">An alternative to JOIN</a></span><span class="contentType">arildg@... &nbsp;|&nbsp;09/19/02</span></td></tr>
+
+
+
+<tr><td class="trcThreadOddRow" height="45"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeItem.gif" align="left" border="0" height="45" width="20"><span class="threadHed"><a href="http://articles.techrepublic.com.com/5208-10878-0.html?forumID=10&amp;threadID=101931&amp;messageID=2329400">RE: SQL basics: Query multiple tables</a></span><span class="contentType">amokgalaka@... &nbsp;|&nbsp;10/01/07</span></td></tr>
+
+
+
+<tr><td class="trcThreadEvenRow" height="45"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeItem.gif" align="left" border="0" height="45" width="20"><span class="threadHed"><a href="http://articles.techrepublic.com.com/5208-10878-0.html?forumID=10&amp;threadID=101931&amp;messageID=2339348">SQL</a></span><span class="contentType">namrata.permude@... &nbsp;|&nbsp;10/15/07</span></td></tr>
+
+
+
+<tr><td class="trcThreadOddRow" height="45"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeItem.gif" align="left" border="0" height="45" width="20"><span class="threadHed"><a href="http://articles.techrepublic.com.com/5208-10878-0.html?forumID=10&amp;threadID=101931&amp;messageID=2347208">RE: SQL basics: Query multiple tables</a></span><span class="contentType">sathyaprakashreddy@... &nbsp;|&nbsp;10/25/07</span></td></tr>
+
+
+
+<tr><td class="trcThreadEvenRow" height="45"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeItem.gif" align="left" border="0" height="45" width="20"><span class="threadHed"><a href="http://articles.techrepublic.com.com/5208-10878-0.html?forumID=10&amp;threadID=101931&amp;messageID=2372075">RE: SQL basics: Query multiple tables</a></span><span class="contentType">tmitchell_s@... &nbsp;|&nbsp;11/28/07</span></td></tr>
+
+
+
+<tr><td class="trcThreadOddRow" height="45"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/treeLastItem.gif" align="left" border="0" height="45" width="20"><span class="threadHed"><a href="http://articles.techrepublic.com.com/5208-10878-0.html?forumID=10&amp;threadID=101931&amp;messageID=2431482">RE: SQL basics: Query multiple tables</a></span><span class="contentType">atoey_rambo@... &nbsp;|&nbsp;02/18/08</span></td></tr>
+
+
+
+
+     </tbody>
+     </table>
+
+<div class="cmntBox">
+            
+          
+
+	<form action="http://techrepublic.com.com/5210-10878-0-1.html" method="post" class="clearFix" name="postform">
+		<h3>What do you think?</h3>
+		<input class="cmntTitle" name="subject" size="40" maxlength="75" value="RE: SQL basics: Query multiple tables" onclick="this.value=''" type="text">
+		<textarea name="body" cols="45" wrap="PHYSICAL" rows="8"></textarea>
+		
+		
+		            <label for="autoSubscribe">Alert me when new posts are added</label>
+		            <input name="autoSubscribe" type="checkbox">
+         	
+
+		<input name="reply" value="true" type="hidden">
+		<input name="forumID" value="10" type="hidden">
+		<input name="threadID" value="101931" type="hidden">
+		<input name="messageID" value="1505074" type="hidden">         
+		
+		<button type="submit" name="doPost">Add Comment</button>
+
+
+	</form>
+</div><!-- /cmntSubmit -->
+
+
+
+   
+   
+
+
+
+
+			<!-- /talkback -->
+			</div><!-- /contentLower -->
+		</div><!--/leftCol-->
+
+		<div id="rightCol" class="noAV">
+			<div class="keyline">
+
+			<!-- MAC ad --><div class="advert"><div style="text-align: center;"><a href="http://www.cnetnetworks.com/adfeedback/?RGROUP=8830&amp;SEGMENTID=717406&amp;LINEID=181133&amp;SP=16" target="new"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/ad_feedback_120x10_trans.gif" alt="advertisement" border="0" height="10" width="120"></a><br></div><iframe src="SQL%20basics%20Query%20Multiple%20Tables_files/mpu_techrep.html" border="0" marginwidth="0" marginheight="0" frameborder="no" height="250" scrolling="no" width="300">
+&lt;SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript"
+SRC="http://ad.doubleclick.net/adj/us.geo.cnetasia/mpu_techrep;sz=300x250;ptile=1;dcopt=ist;ord=2008.04.07.07.23.33?"&gt;&lt;/SCRIPT&gt;
+&lt;NOSCRIPT&gt; &lt;A
+href="http://adlog.com.com/adlog/e/r=8830&amp;s=717406&amp;o=22:&amp;h=cn&amp;p=2&amp;b=9&amp;l=en_US&amp;site=11&amp;pt=5100&amp;nd=22&amp;pid=&amp;cid=1050307&amp;pp=100&amp;e=87&amp;rqid=01c17-ad-e447F128DA5017903&amp;orh=233.189.104&amp;oepartner=&amp;epartner=&amp;cpnmodule=&amp;count=&amp;ra=218.111.187.116&amp;t=2008.04.07.07.23.33&amp;event=58/http://ad.doubleclick.net/jump/us.geo.cnetasia/mpu_techrep;sz=300x250;ptile=1;dcopt=ist;ord=2008.04.07.07.23.33?"&gt;&lt;IMG
+SRC="http://ad.doubleclick.net/ad/us.geo.cnetasia/mpu_techrep;sz=300x250;ptile=1;dcopt=ist;ord=2008.04.07.07.23.33?"
+BORDER="0" WIDTH="300" height="250"&gt;&lt;/A&gt; &lt;/NOSCRIPT&gt;
+</iframe><img src="SQL%20basics%20Query%20Multiple%20Tables_files/dotclear_003.gif" alt="" style="position: absolute; top: 0px; left: 0px;" height="0" width="0"></div><!-- MAC [r20080402-1004-v1-13-9-FilterBugFix:1.13.9] c13-b2b-publish-web4.cnet.com::3975809968 2008.04.07.07.23.33 --><!-- MAC T 2BA.2BA.2BE.2BE -->
+
+			
+						<!--Shelley Doll-->
+			
+
+
+
+
+
+
+
+<div id="featuredJobs">
+	<h2><span>TechRepublic </span>Featured Jobs</h2>
+
+	<table cellpadding="0" cellspacing="0">
+		<tbody><tr>
+			<th>Job Title/Location</th>
+			<th>Posted</th>
+		</tr>
+
+	</tbody></table>
+	<ul>
+			<li class="search">
+			<form id="" action="http://jobs.techrepublic.com.com/a/jobs/search" method="get" name="" onsubmit="return sh_process_search(this)">
+
+					<input id="searchInput" maxlength="45" name="l" value="Search Jobs by Zip Code" onfocus="this.value=''" type="text">
+					<input id="searchButton" value="Go" type="submit">
+			
+
+			</form>
+		</li>
+		<li class="poweredBy">Powered by: <a href="http://www.simplyhired.com/"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/logo_simplyHired.gif" alt="Simply Hired"></a></li>
+		<li class="clear">.</li>
+	</ul>
+</div>
+
+
+										
+         <h2>White Papers</h2>
+         <div class="rhContent">
+         <!-- MAC ad --><ul id="rubics">
+<li><a target="_top" href="http://dw.com.com/rubicsclk?ver=2&amp;ts=2008.04.07.00.23.33&amp;edId=87&amp;onId=10878&amp;ptId=2415&amp;sId=11&amp;appId=4&amp;offId=703&amp;unitId=10&amp;poolId=3&amp;f1=11&amp;f2=%2d0&amp;f3=%2d0&amp;alg=3&amp;&amp;opt=1&amp;linkPos=1&amp;destUrl=http%3A%2F%2Fwhitepapers.techrepublic.com.com%2Fabstract.aspx%3Fdocid%3D160104%26promo%3D100503">Successfully Managing Remote Teams</a>  <cite>Global Knowledge</cite></li>
+<li><a target="_top" href="http://dw.com.com/rubicsclk?ver=2&amp;ts=2008.04.07.00.23.33&amp;edId=87&amp;onId=10878&amp;ptId=2415&amp;sId=11&amp;appId=4&amp;offId=270&amp;unitId=10&amp;poolId=3&amp;f1=11&amp;f2=%2d0&amp;f3=%2d0&amp;alg=3&amp;&amp;opt=1&amp;linkPos=2&amp;destUrl=http%3A%2F%2Fwhitepapers.techrepublic.com.com%2Fabstract.aspx%3Fdocid%3D148293%26promo%3D100503">E-Organizing for Busy Project Managers</a>  <cite>Global Knowledge</cite></li>
+<li><a target="_top" href="http://dw.com.com/rubicsclk?ver=2&amp;ts=2008.04.07.00.23.33&amp;edId=87&amp;onId=10878&amp;ptId=2415&amp;sId=11&amp;appId=4&amp;offId=2260&amp;unitId=10&amp;poolId=3&amp;f1=11&amp;f2=%2d0&amp;f3=%2d0&amp;alg=3&amp;&amp;opt=1&amp;linkPos=3&amp;destUrl=http%3A%2F%2Fwhitepapers.techrepublic.com.com%2Fabstract.aspx%3Fdocid%3D167847%26promo%3D100503">An Introduction to PMI's Project Life Cycle</a>  <cite>Global Knowledge</cite></li>
+<li><a target="_top" href="http://dw.com.com/rubicsclk?ver=2&amp;ts=2008.04.07.00.23.33&amp;edId=87&amp;onId=10878&amp;ptId=2415&amp;sId=11&amp;appId=4&amp;offId=2255&amp;unitId=10&amp;poolId=3&amp;f1=11&amp;f2=%2d0&amp;f3=%2d0&amp;alg=3&amp;&amp;opt=1&amp;linkPos=4&amp;destUrl=http%3A%2F%2Fwhitepapers.techrepublic.com.com%2Fabstract.aspx%3Fdocid%3D297609%26promo%3D100503">Preparing for the PMP or CAPM Exam?</a>  <cite>Global Knowledge</cite></li>
+<li><a target="_top" href="http://dw.com.com/rubicsclk?ver=2&amp;ts=2008.04.07.00.23.33&amp;edId=87&amp;onId=10878&amp;ptId=2415&amp;sId=11&amp;appId=4&amp;offId=2257&amp;unitId=10&amp;poolId=3&amp;f1=11&amp;f2=%2d0&amp;f3=%2d0&amp;alg=3&amp;&amp;opt=1&amp;linkPos=5&amp;destUrl=http%3A%2F%2Fwhitepapers.techrepublic.com.com%2Fabstract.aspx%3Fdocid%3D300133%26promo%3D100503">We Cannot Trade Quality for Schedule or Budget!</a>  <cite>Global Knowledge</cite></li>
+<li><a target="_top" href="http://dw.com.com/rubicsclk?ver=2&amp;ts=2008.04.07.00.23.33&amp;edId=87&amp;onId=10878&amp;ptId=2415&amp;sId=11&amp;appId=4&amp;offId=2256&amp;unitId=10&amp;poolId=3&amp;f1=11&amp;f2=%2d0&amp;f3=%2d0&amp;alg=3&amp;&amp;opt=1&amp;linkPos=6&amp;destUrl=http%3A%2F%2Fwhitepapers.techrepublic.com.com%2Fabstract.aspx%3Fdocid%3D300129%26promo%3D100503">The Role of Critical Thinking in Effective Decision Making</a>  <cite>Global Knowledge</cite></li>
+</ul>
+<div>
+<img src="SQL%20basics%20Query%20Multiple%20Tables_files/c_002.gif" alt="" height="1" width="1">
+</div>
+
+<!-- ros [r20070521-1832-ronr-v1-13-5:1.13.5] c17-ad-rubics-ros5.cnet.com::3976440752 2008.04.07.00.23.33 --><!-- ros t 0.0.0.0.1.1.1.2 --><!-- MAC [r20080402-1004-v1-13-9-FilterBugFix:1.13.9] c13-b2b-publish-web4.cnet.com::3975809968 2008.04.07.07.23.33 --><!-- MAC T 2BE.2BE.2C2.2C2 -->
+         </div><!-- /rhContent -->
+
+		<!-- MAC ad --><div class="advert"><div style="text-align: center;"><a href="http://www.cnetnetworks.com/adfeedback/?RGROUP=8538&amp;SEGMENTID=790173&amp;LINEID=247343&amp;SP=16" target="new"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/ad_feedback_120x10_trans.gif" alt="advertisement" border="0" height="10" width="120"></a><br></div><div style="text-align: center;"><center>
+<iframe src="SQL%20basics%20Query%20Multiple%20Tables_files/search.html" frameborder="no" height="250" scrolling="no" width="300"></iframe>
+</center></div><img src="SQL%20basics%20Query%20Multiple%20Tables_files/dotclear.gif" alt="" style="position: absolute; top: 0px; left: 0px;" height="0" width="0"></div><!-- MAC [r20080402-1004-v1-13-9-FilterBugFix:1.13.9] c13-b2b-publish-web4.cnet.com::3975809968 2008.04.07.07.23.33 --><!-- MAC T 2C2.2C2.2C4.2C5 -->
+			
+		<iframe style="border: medium none ; background: rgb(255, 255, 255) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;" marginheight="0" marginwidth="0" target="_top" src="SQL%20basics%20Query%20Multiple%20Tables_files/search_002.html" class="bidwar" align="top" frameborder="0" height="300" scrolling="no" width="100%"></iframe>
+		
+					<h2>Article Categories</h2>
+    <dl class="spreadsheet">
+
+
+	 <dt>Security
+	     </dt>
+	  <dd><a href="http://articles.techrepublic.com.com/1200-1009-5734095.html">Security Solutions</a>, <a href="http://articles.techrepublic.com.com/1200-1009-5735346.html">IT Locksmith</a>
+	      </dd>
+
+	 <dt>Networking
+	     and Communications </dt>
+
+	<dd>
+	<a href="http://articles.techrepublic.com.com/1200-1035-5733943.html">E-mail
+	Administration NetNote</a>, <a href="http://articles.techrepublic.com.com/1200-1035-5685066.html">Cisco Routers and
+	Switches</a></dd>
+
+
+	 <dt>CIO
+	     and IT Management </dt>
+
+	<dd>
+	<a href="http://articles.techrepublic.com.com/1200-10878-5737154.html">Project Management</a>, <a href="http://articles.techrepublic.com.com/1200-10878-5737230.html">CIO Issues</a>, <a href="http://articles.techrepublic.com.com/1200-10878-5737121.html">Strategies that
+	Scale</a></dd>
+
+	<dt>Desktops, Laptops &amp; OS </dt>
+	<dd><a href="http://articles.techrepublic.com.com/1200-10877-5735803.html">Windows 2000 Professional</a>, <a href="http://articles.techrepublic.com.com/1200-10877-5734115.html">Microsoft Word</a>, 
+
+	<a href="http://articles.techrepublic.com.com/1200-10877-5735748.html">Microsoft Excel</a>, 
+
+	<a href="http://articles.techrepublic.com.com/1200-10877-5735750.html">Microsoft Access</a>, 
+
+	<a href="http://articles.techrepublic.com.com/1200-10877-5735819.html">Windows XP</a>, 
+	</dd>
+	<dt>Data Management </dt>
+	<dd>
+
+	<a href="http://articles.techrepublic.com.com/1200-10880-5737252.html">Oracle</a>, 
+
+	<a href="http://articles.techrepublic.com.com/1200-10880-5737262.html">SQL Server</a>
+	</dd>
+
+	<dt>Servers</dt>
+	<dd><a href="http://articles.techrepublic.com.com/1200-10879-5735829.html">Windows NT</a>, <a href="http://articles.techrepublic.com.com/1200-10879-5711869.html">Linux NetNote</a>, <a href="http://articles.techrepublic.com.com/1200-10879-5735862.html">Windows Server 2003</a>
+	</dd>
+
+	<dt>Career Development </dt>
+
+	<dd><a href="http://articles.techrepublic.com.com/1200-10881-5737329.html" title="/1200-10881-5737329.html">Geek Trivia</a> 
+	</dd>
+
+
+	<dt>Software/Web Development </dt>
+
+	<dd class="last">
+	<a href="http://articles.techrepublic.com.com/1200-3513-5737146.html">Web Development Zone</a>, 
+
+	<a href="http://articles.techrepublic.com.com/1200-3513-5737269.html">Visual Basic</a>, 
+
+	<a href="http://articles.techrepublic.com.com/1200-3513-5737277.html">.NET</a></dd>
+	</dl>
+		</div><!-- /keyline -->
+		</div><!-- /rightCol -->
+
+	</div><!--/content-->
+
+	<div id="preFooter">
+		<hr>
+
+	</div><!-- /preFooter -->
+
+		<ul id="footer">
+
+	<li id="footFeedback">		
+		<a class="eb_foot" href="http://www.zdnet.com/">A ZDNet brand</a>
+		<a href="http://techrepublic.custhelp.com/">Site Help &amp; Feedback</a>
+	</li>
+	
+		<li id="footCnet">
+
+			<div class="clearFix">
+
+			<p><a href="http://www.cnetnetworks.com/"><b>About CNET Networks</b></a> | <a href="http://www.cnetnetworks.com/careers/">Jobs</a> | <a href="http://www.cnetnetworks.com/advertise/">Advertise</a> | <a href="http://www.cnetnetworks.com/partnerships/">Partnerships</a> | <a href="http://m.techrepublic.com.com/">Mobile</a></p>
+
+					<script language="javascript">
+				document.write("<form><p>Visit other CNET Networks sites:</p> <select name=\"menu\" id=\"form_menu\" ><option selected value=\"\">Select Site</option><option value=\"http://www.bnet.com\">BNET</option><option value=\"http://www.cnet.com\">CNET.com</option><option value=\"http://www.cnetchannel.com\">CNET Channel</option><option value=\"http://www.gamespot.com\">GameSpot</option><option value=\"http://www.cnetnetworks.com/advertise/properties/international.html\">International Media</option><option value=\"http://www.mp3.com\">MP3.com</option><option value=\"http://www.mysimon.com\">mySimon</option><option value=\"http://www.search.com\">Search.com</option><option value=\"http://techrepublic.com.com/\">TechRepublic</option><option value=\"http://www.tv.com\">TV.com</option><option value=\"http://www.zdnet.com\">ZDNet</option></select><a onClick=\"window.location=document.getElementById('form_menu').options[document.getElementById('form_menu').selectedIndex].value;\"><img src=\"http://i.techrepublic.com.com/images/200609/go_search_button.gif\" id=\"visitButton\" height=\"21\" width=\"55\"  /></a></form>");
+					</script><form><p>Visit other CNET Networks sites:</p> <select name="menu" id="form_menu"><option selected="selected" value="">Select Site</option><option value="http://www.bnet.com">BNET</option><option value="http://www.cnet.com">CNET.com</option><option value="http://www.cnetchannel.com">CNET Channel</option><option value="http://www.gamespot.com">GameSpot</option><option value="http://www.cnetnetworks.com/advertise/properties/international.html">International Media</option><option value="http://www.mp3.com">MP3.com</option><option value="http://www.mysimon.com">mySimon</option><option value="http://www.search.com">Search.com</option><option value="http://techrepublic.com.com/">TechRepublic</option><option value="http://www.tv.com">TV.com</option><option value="http://www.zdnet.com">ZDNet</option></select><a onclick="window.location=document.getElementById('form_menu').options[document.getElementById('form_menu').selectedIndex].value;"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/go_search_button.gif" id="visitButton" height="21" width="55"></a></form>
+
+				<noscript>
+					<a href="http://www.bnet.com/">BNET</a> | 
+					<a href="http://www.cnet.com/">CNET.com</a> | 
+					<a href="http://www.cnetchannel.com/main/default.aspx">CNET Channel</a> | 
+					<a href="http://www.gamespot.com/">GameSpot</a> | 
+					<a href="http://www.cnetnetworks.com/advertise/properties/international.html">International Media</a> | 
+					<a href="http://www.mp3.com/">MP3.com</a> | 
+					<a href="http://www.mysimon.com/2001-1_8-0.html">mySimon</a> | 
+					<a href="http://www.search.com/">Search.com</a> | 
+					<a href="http://techrepublic.com.com/">TechRepublic</a> | 
+					<a href="http://www.tv.com/">TV.com</a> | 
+					<a href="http://www.zdnet.com/">ZDNet</a>
+				</noscript> 
+			</div>
+
+		</li>
+		<li id="footCopyright">
+			Copyright � 2008 CNET Networks, Inc. All Rights Reserved.  <a href="http://www.cnet.com/html/aboutcnet/editorial/privacy.html?tag=tr.ft.co">Privacy Policy</a>  |  <a href="http://www.cnet.com/html/aboutcnet/editorial/terms.html?tag=tr.ft.co">Terms of Use</a>
+
+		</li>
+	</ul><!--/footer-->
+
+</div><!--/main -->
+</div><!--/width-->
+	<!-- MAC ad --><div class="hotspot">
+		<ul>
+			<li class="head">Business Software Center</li>
+			<li class="yesBd">
+				<a href="http://adlog.com.com/adlog/c/r=9108&amp;s=790620&amp;o=22:&amp;h=cn&amp;p=2&amp;b=9&amp;l=en_US&amp;site=11&amp;pt=5100&amp;nd=22&amp;pid=&amp;cid=1050307&amp;pp=100&amp;e=87&amp;rqid=00c17-ad-e347F128CB5043EA4&amp;orh=233.189.104&amp;oepartner=&amp;epartner=&amp;cpnmodule=&amp;count=&amp;ra=218.111.187.116&amp;t=2008.04.07.07.23.33/http://dw.com.com/redir?lop=hs.oracle.customer&amp;destUrl=http://thecustomercollective.com/"><b>The Customer Collective: </b> Join the online network for sales and marketing executives</a>
+			</li>
+
+			<li class="noBd">
+				From our sponsors
+			</li>
+			<li class="noBd"><span>Oracle White Papers</span></li>
+			<li class="noBd img">
+				<a href="http://adlog.com.com/adlog/c/r=9108&amp;s=790620&amp;o=22:&amp;h=cn&amp;p=2&amp;b=9&amp;l=en_US&amp;site=11&amp;pt=5100&amp;nd=22&amp;pid=&amp;cid=1050307&amp;pp=100&amp;e=87&amp;rqid=00c17-ad-e347F128CB5043EA4&amp;orh=233.189.104&amp;oepartner=&amp;epartner=&amp;cpnmodule=&amp;count=&amp;ra=218.111.187.116&amp;t=2008.04.07.07.23.33/http://dw.com.com/redir?lop=hs.oracle.datagrid&amp;destUrl=http://whitepapers.zdnet.com/whitepaper.aspx?docid=327194">
+					<img src="SQL%20basics%20Query%20Multiple%20Tables_files/hs_oracle1.jpg" alt="oracle">
+				</a>
+			</li>
+			<li class="yesBd">
+				<span><a href="http://adlog.com.com/adlog/c/r=9108&amp;s=790620&amp;o=22:&amp;h=cn&amp;p=2&amp;b=9&amp;l=en_US&amp;site=11&amp;pt=5100&amp;nd=22&amp;pid=&amp;cid=1050307&amp;pp=100&amp;e=87&amp;rqid=00c17-ad-e347F128CB5043EA4&amp;orh=233.189.104&amp;oepartner=&amp;epartner=&amp;cpnmodule=&amp;count=&amp;ra=218.111.187.116&amp;t=2008.04.07.07.23.33/http://dw.com.com/redir?lop=hs.oracle.datagrid&amp;destUrl=http://whitepapers.zdnet.com/whitepaper.aspx?docid=327194">Data Grids and Service-Oriented Architecture �</a></span>
+			</li>
+
+			<li class="noBd img">
+				<a href="http://adlog.com.com/adlog/c/r=9108&amp;s=790620&amp;o=22:&amp;h=cn&amp;p=2&amp;b=9&amp;l=en_US&amp;site=11&amp;pt=5100&amp;nd=22&amp;pid=&amp;cid=1050307&amp;pp=100&amp;e=87&amp;rqid=00c17-ad-e347F128CB5043EA4&amp;orh=233.189.104&amp;oepartner=&amp;epartner=&amp;cpnmodule=&amp;count=&amp;ra=218.111.187.116&amp;t=2008.04.07.07.23.33/http://dw.com.com/redir?lop=hs.oracle.secure&amp;destUrl=http://whitepapers.zdnet.com/whitepaper.aspx?docid=327193">
+					<img src="SQL%20basics%20Query%20Multiple%20Tables_files/hs_oracle2.jpg" alt="oracle">
+				</a>
+			</li>
+			<li class="yesBd">
+				<span><a href="http://adlog.com.com/adlog/c/r=9108&amp;s=790620&amp;o=22:&amp;h=cn&amp;p=2&amp;b=9&amp;l=en_US&amp;site=11&amp;pt=5100&amp;nd=22&amp;pid=&amp;cid=1050307&amp;pp=100&amp;e=87&amp;rqid=00c17-ad-e347F128CB5043EA4&amp;orh=233.189.104&amp;oepartner=&amp;epartner=&amp;cpnmodule=&amp;count=&amp;ra=218.111.187.116&amp;t=2008.04.07.07.23.33/http://dw.com.com/redir?lop=hs.oracle.secure&amp;destUrl=http://whitepapers.zdnet.com/whitepaper.aspx?docid=327193">What's Required to Secure a Service-Oriented Architecture �</a></span>
+			</li>
+
+			<li class="noBd img">
+				<a href="http://adlog.com.com/adlog/c/r=9108&amp;s=790620&amp;o=22:&amp;h=cn&amp;p=2&amp;b=9&amp;l=en_US&amp;site=11&amp;pt=5100&amp;nd=22&amp;pid=&amp;cid=1050307&amp;pp=100&amp;e=87&amp;rqid=00c17-ad-e347F128CB5043EA4&amp;orh=233.189.104&amp;oepartner=&amp;epartner=&amp;cpnmodule=&amp;count=&amp;ra=218.111.187.116&amp;t=2008.04.07.07.23.33/http://dw.com.com/redir?lop=hs.oracle.bi&amp;destUrl=http://whitepapers.zdnet.com/whitepaper.aspx?docid=327197">
+					<img src="SQL%20basics%20Query%20Multiple%20Tables_files/hs_oracle3.jpg" alt="oracle">
+				</a>
+			</li>
+			<li class="yesBd">
+				<span><a href="http://adlog.com.com/adlog/c/r=9108&amp;s=790620&amp;o=22:&amp;h=cn&amp;p=2&amp;b=9&amp;l=en_US&amp;site=11&amp;pt=5100&amp;nd=22&amp;pid=&amp;cid=1050307&amp;pp=100&amp;e=87&amp;rqid=00c17-ad-e347F128CB5043EA4&amp;orh=233.189.104&amp;oepartner=&amp;epartner=&amp;cpnmodule=&amp;count=&amp;ra=218.111.187.116&amp;t=2008.04.07.07.23.33/http://dw.com.com/redir?lop=hs.oracle.bi&amp;destUrl=http://whitepapers.zdnet.com/whitepaper.aspx?docid=327197">Business Intelligence and Enterprise Performance Management  �</a></span>
+			</li>
+
+			<li class="noBd img">
+				<a href="http://adlog.com.com/adlog/c/r=9108&amp;s=790620&amp;o=22:&amp;h=cn&amp;p=2&amp;b=9&amp;l=en_US&amp;site=11&amp;pt=5100&amp;nd=22&amp;pid=&amp;cid=1050307&amp;pp=100&amp;e=87&amp;rqid=00c17-ad-e347F128CB5043EA4&amp;orh=233.189.104&amp;oepartner=&amp;epartner=&amp;cpnmodule=&amp;count=&amp;ra=218.111.187.116&amp;t=2008.04.07.07.23.33/http://dw.com.com/redir?lop=hs.oracle.makecase&amp;destUrl=http://whitepapers.zdnet.com/whitepaper.aspx?docid=337887">
+					<img src="SQL%20basics%20Query%20Multiple%20Tables_files/hs_oracle4.jpg" alt="oracle">
+				</a>
+			</li>
+			<li class="yesBd">
+				<span><a href="http://adlog.com.com/adlog/c/r=9108&amp;s=790620&amp;o=22:&amp;h=cn&amp;p=2&amp;b=9&amp;l=en_US&amp;site=11&amp;pt=5100&amp;nd=22&amp;pid=&amp;cid=1050307&amp;pp=100&amp;e=87&amp;rqid=00c17-ad-e347F128CB5043EA4&amp;orh=233.189.104&amp;oepartner=&amp;epartner=&amp;cpnmodule=&amp;count=&amp;ra=218.111.187.116&amp;t=2008.04.07.07.23.33/http://dw.com.com/redir?lop=hs.oracle.makecase&amp;destUrl=http://whitepapers.zdnet.com/whitepaper.aspx?docid=337887">Making the Case for Oracle Database on Windows �</a></span>
+			</li>
+
+			<li class="noBd img">
+				<a href="http://adlog.com.com/adlog/c/r=9108&amp;s=790620&amp;o=22:&amp;h=cn&amp;p=2&amp;b=9&amp;l=en_US&amp;site=11&amp;pt=5100&amp;nd=22&amp;pid=&amp;cid=1050307&amp;pp=100&amp;e=87&amp;rqid=00c17-ad-e347F128CB5043EA4&amp;orh=233.189.104&amp;oepartner=&amp;epartner=&amp;cpnmodule=&amp;count=&amp;ra=218.111.187.116&amp;t=2008.04.07.07.23.33/http://dw.com.com/redir?lop=hs.oracle.logo&amp;destUrl=http://www.oracle.com/index.html">
+					<img src="SQL%20basics%20Query%20Multiple%20Tables_files/OracleFusionMiddlewareCrop.jpg" alt="oracle">
+				</a>
+			</li>
+		</ul>
+	</div><!-- /hotspot --><img src="SQL%20basics%20Query%20Multiple%20Tables_files/dotclear_002.gif" alt="" style="position: absolute; top: 0px; left: 0px;" height="0" width="0"><!-- MAC [r20080402-1004-v1-13-9-FilterBugFix:1.13.9] c13-b2b-publish-web4.cnet.com::3975809968 2008.04.07.07.23.33 --><!-- MAC T 2C5.2C5.2C8.2CA -->
+
+	<!-- MAC ad --><div class="window"><div style="text-align: center;"><a href="http://www.cnetnetworks.com/adfeedback/?RGROUP=10767&amp;SEGMENTID=754947&amp;LINEID=216750&amp;SP=8" target="new"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/ad_feedback_120x10_trans.gif" alt="advertisement" border="0" height="10" width="120"></a><br></div><a href="http://adlog.com.com/adlog/c/r=10767&amp;s=754947&amp;o=22:&amp;h=cn&amp;p=2&amp;b=9&amp;l=en_US&amp;site=11&amp;pt=5100&amp;nd=22&amp;pid=&amp;cid=1050307&amp;pp=300&amp;e=87&amp;rqid=01c17-ad-e547F129694FAD07D&amp;orh=233.189.104&amp;oepartner=&amp;epartner=&amp;cpnmodule=&amp;count=&amp;ra=218.111.187.116&amp;t=2008.04.07.07.23.33/http://video.zdnet.com/CIOSessions/?p=189" target="_blank"><img src="SQL%20basics%20Query%20Multiple%20Tables_files/CIO_SFO_125x125.gif" alt="Click Here" border="0" height="125" width="125"></a></div><!-- MAC [r20080402-1004-v1-13-9-FilterBugFix:1.13.9] c13-b2b-publish-web4.cnet.com::3975809968 2008.04.07.07.23.33 --><!-- MAC T 2CA.2CA.2CC.2CD -->
+
+</div><!--/goiter-->
+
+
+
+<img src="SQL%20basics%20Query%20Multiple%20Tables_files/c_003.gif" alt="" border="0" height="1" width="1">
+
+</body></html>

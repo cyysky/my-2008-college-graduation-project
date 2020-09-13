@@ -1,0 +1,79 @@
+/* print css for techrepublic articles*/
+
+body {
+	background: white;
+	font: normal 12pt Georgia,serif;
+	line-height: 18pt;
+}
+
+#width {
+	width: auto;
+	margin: 0 5%;
+	padding: 0;
+	float: none !important;
+	color: black;
+	background: transparent none;
+}
+
+a:link, a:visited {
+	color: #520;
+	background: transparent;
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+#topHTML, #masthead, #headerNav, .interact, .tags, #contentLower, #rightCol, #preFooter, #footFeedback, #footCnet, .window, .hotspot {
+	display:none;
+}
+
+.takeaway {
+	border-bottom: 1px solid #bfbfbf;
+	padding-bottom: 15px;
+}
+
+.byline {
+	font-size: 10pt;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: Arial,sans-serif;
+	line-height:1.2em;
+}
+
+#contentHeader h1 {
+	font-size: 20pt;
+	font-weight: normal;
+}
+
+h1, h2 {font-size: 18pt;}
+h3 {font-size: 15pt;}
+h4, h5, h6 {font-size: 12pt;}
+
+ul, ol {
+	padding:0 0 0 25px;
+	margin:15px 0;
+}
+li {margin:10px 0;}
+
+#footer {padding:0;}
+
+#footCopyright {
+	list-style-type:none;
+	font: normal 10pt Arial,sans-serif;
+	margin:20px 0 0 0;
+}
+
+
+
+
+/* figures */
+
+.figure {margin:25px 0;}
+.figure h4 {margin-bottom:5px;}
+.figure .caption {font-size:.85em;margin:6px 0 0 0;line-height:1.1em;color:#333;}
+
+table {margin:18px 0 25px 0;padding:0;}
+table.MsoTableGrid {margin:0;}
+td {padding:0;}
+.fighead {font-weight:bold;margin-bottom:2px;display:block;}
+.caption {font-size:.85em;margin:4px 0 0 0;line-height:1.05em;display:block;color:#333;}

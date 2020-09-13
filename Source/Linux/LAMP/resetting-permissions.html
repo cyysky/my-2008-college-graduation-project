@@ -1,0 +1,572 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<title>MySQL ::   MySQL 5.0 Reference Manual :: B.1.4.1 How to Reset the Root Password</title> 
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+     
+	<link rel="stylesheet" type="text/css" media="screen" href="/common/css/mysql-08058.css" />
+		<link rel="stylesheet" type="text/css" media="projection" href="/common/css/mysql-08058.css" />
+	<link rel="stylesheet" type="text/css" media="print" href="/common/css/print.css" />
+	 
+	<link rel="stylesheet" type="text/css" href="/doc/docs.css" />
+	 
+	
+	   <link rel="contents" href="index.html" title="MySQL Manual" /><link rel="start" href="index.html" title="MySQL Manual" /><link rel="stylesheet" type="text/css" href="/doc/docs.css" /><link rel="prev" href="administration-issues.html" title="B.1.4 Administration-Related Issues"/><link rel="next" href="crashing.html?ff=nopfpls" title="B.1.4.2 What to Do If MySQL Keeps Crashing"/><link rel="up" href="administration-issues.html" title="B.1.4 Administration-Related Issues"/> 
+	<link rel="shortcut icon" href="/common/favicon.ico" />
+    <script language="javascript" type="text/javascript" src="/common/js/clear_search_text.js"></script>
+    		<noscript></noscript>
+        
+        
+            
+    
+</head>
+<body  >
+
+<div id="container">
+<!--UdmComment-->
+<a class="skipToContent" href="#mainContent">Skip navigation links</a>
+<div id="header" >
+
+	<div id="logo">
+		<a href="http://www.mysql.com/"><img src="/common/logos/logo_mysql_sun.gif" width="205" height="68" alt="MySQL" /></a>
+	</div>
+	
+	
+	<div id="tag">
+		<p>The world's most popular open source database</p>
+	</div>
+	
+	<div id="contactButton"><p><a href="http://www.mysql.com/company/contact/">Contact a MySQL Representative</a></p></div>
+		
+
+
+
+  
+  <div id="toplogin" >
+  	
+		
+					 <p>chong yy (<a href="http://www.mysql.com/logout.php">Logout</a>) | <a href="http://www.mysql.com/profile/">Profile</a></p>
+			  </div>
+  
+    
+	
+	<div id="worldwide">
+	<br />
+	</div> 
+</div> 
+<span style="clear: both; display: block"></span>
+
+<div class="outerTabsMinWidth">
+<div class="innerTabsMinWidth">
+	<ul id="tabs">
+		<li ><a href="http://www.mysql.com">MySQL.com</a></li>
+		<li class="current"><a href="http://dev.mysql.com">Developer Zone</a></li>
+		<li ><a href="http://solutions.mysql.com">Partners &amp; Solutions</a></li>
+		<li><a href="https://customer.mysql.com">Customer Login</a></li>
+	</ul>
+</div></div>
+
+
+<div id="menu">
+    <div class="bgRight">
+	<ul>
+	<li class="link"><a  href="http://dev.mysql.com/">DevZone</a>
+	
+		
+		
+	</li>
+	
+	<li class="link"><a  href="/downloads/">Downloads</a>
+	
+		
+		
+	</li>
+	
+	<li class="current"><a class="current " href="/doc/">Documentation</a>
+	
+		
+		
+	</li>
+	
+	<li class="link"><a  href="/articles/">Articles</a>
+	
+		
+		
+	</li>
+	
+	<li class="link"><a  href="http://forums.mysql.com/">Forums</a>
+	
+		
+		
+	</li>
+	
+	<li class="link"><a  href="http://bugs.mysql.com/">Bugs</a>
+	
+		
+		
+	</li>
+	
+	<li class="link"><a  href="http://forge.mysql.com/">Forge</a>
+	
+		
+		
+	</li>
+	
+	<li class="link last"><a  href="http://blogs.mysql.com/">Blogs</a>
+	
+		
+		
+	</li>
+	
+</ul>
+	<ul id="search"><li class="last">
+	 <form id="searchform" name="searchform" action="http://www.mysql.com/search/" method="get">
+		<input class="searchBox" type="text" id="q" name="q"   value="Search" size="12" maxlength="255" onfocus="clearSearchText();" />
+		<input type="hidden" name="charset" value="utf-8" />
+	
+			 			 		<input style="vertical-align: bottom;" type="image" src="/common/img/button/button-search.gif" alt="Search" value="Search" />
+	 </form>
+	</li></ul>
+	&nbsp;</div>
+</div><!--/UdmComment-->
+
+<div class="page_container">
+	<div class="page_sidebar">
+	<!--UdmComment-->
+	<div id="submenu">	
+		<ul>
+			<li class="current"><a class="current subitems" href="/doc/index.html">Documentation Library</a>
+			
+			<ul class="subitems1">
+				 <li><a href="index.html"><b>Table of Contents</b></a>
+				 
+
+				 <ul class="subitems2">
+				 				 
+				 	
+				 	
+				 	
+				 					 		<li>
+					 	<a href="/doc/refman/6.0/en/resetting-permissions.html" >MySQL 6.0 Reference Manual</a>  										
+				 	</li>
+				 
+				 				 
+				 	
+				 	
+				 	
+				 					 		<li>
+					 	<a href="/doc/refman/5.1/en/resetting-permissions.html" >MySQL 5.1 Reference Manual</a>  										
+				 	</li>
+				 
+				 				 
+				 	
+				 	
+				 	
+				 					 		<li class="current">MySQL 5.0 Reference Manual
+				 						
+				 	</li>
+				 
+				 				 
+				 	
+				 	
+				 	
+				 					 		<li>
+					 	<a href="/doc/refman/4.1/en/resetting-permissions.html" >MySQL 3.23/4.0/4.1 Manual</a>  										
+				 	</li>
+				 
+				 				 
+				 </ul>
+				 
+				 
+				 
+				 </li>
+
+
+			</ul>
+			
+			
+			</li>
+		</ul>
+
+	 <div class="searchmanual">	
+	<form action="/doc/mysql/search.php" method="get" id="docsearch">
+		<strong><label for="searchq">Search manual:</label></strong> <br />
+													
+							 <input type="hidden" name="version" value="5.0" />
+			 <input id="searchq" type="text" name="q" value="" size="14" />
+			 <input id="searchsubmit" type="submit" value="Go" />
+			 <input type="hidden" name="from" value="/doc/refman/5.0/en/resetting-permissions.html" />
+			 <input type="hidden" name="lang" value="en" />
+			</form>
+	
+	</div>
+	
+	
+	</div>
+	
+ <br />
+			<div id="langs">
+			 <b>Additional languages</b>
+			 <ul>
+					<li><a href="../fr/resetting-permissions.html">French</a></li><li><a href="../es/resetting-permissions.html">Spanish</a></li>
+				</ul>			 
+			</div>		 
+  <div class="gray2"><hr /></div>
+
+	
+	<div style="margin-top: 15px; text-align: center">
+		<script type="text/javascript" language="javascript">
+		<!--
+		google_ad_client = "pub-3255031602947757";
+		google_ad_width = 160;
+		google_ad_height = 600;
+		google_ad_format = "160x600_as";
+		google_ad_type = "text";
+		google_ad_channel = "";
+		google_color_border = "eeeeee";
+		google_color_bg = "eeeeee";
+		google_color_link = "00648c";
+		google_color_url = "00648c";
+		google_color_text = "000000";
+		//-->
+		</script>
+		<noscript></noscript>		
+		<script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js" language="javascript">
+		</script>
+		<noscript></noscript>
+	</div>			
+		
+	
+
+  <div class="gray2"><hr /></div>
+			
+  <!--/UdmComment-->
+	
+</div>  
+<!-- Main content -->
+<a name="mainContent"></a>
+<div id="page" class="sidebar" >
+
+	 
+	
+	
+
+
+
+
+	<!--UdmComment-->
+
+<div id="docheader"><a href="index.html"> MySQL 5.0 Reference Manual</a> :: <a href="error-handling.html">B Errors, Error Codes, and Common Problems</a> :: <a href="problems.html">B.1 Problems and Common Errors</a> :: <a href="administration-issues.html">B.1.4 Administration-Related Issues</a> :: B.1.4.1 How to Reset the Root Password</div>
+
+	 
+	
+
+	
+<script language="javascript">
+
+<!--
+function toggle(what){
+ if(document.getElementById(what).style.display == "none"){
+   document.getElementById(what).style.display = "block";
+ }else{
+   document.getElementById(what).style.display = "none";
+ }
+}
+//-->
+
+</script>
+<noscript></noscript>
+
+<div style="float: right; width: 250px; margin: 0px 0px 8px 8px; background: white">
+	<div style="text-align: right; font-size: 90%; margin-bottom: 4px">
+		<div style="text-align: left;"><a style="text-decoration: none" href="administration-issues.html" title="Previous Section">&laquo; B.1.4 Administration-Related Issues</a></div>
+		<hr size="1" noshade="noshade" align="center" width="40" style="margin: 0px auto 2px auto" />		<a style="text-decoration: none" href="crashing.html" title="Next Section">B.1.4.2 What to Do If MySQL Keeps Crashing  &raquo;</a>	</div>
+	<div style="padding: 4px 0px 0px 4px; border: 2px dotted #ccc; border-right: none;">
+		<b>Section Navigation</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<small>[<a href="#" onclick="toggle('sectionnav');"  onkeypress="if (event.keyCode == 13) { toggle('sectionnav'); }">Toggle</a>]</small>
+			<ul id="sectionnav">
+				<li class="p"><a href="administration-issues.html">B.1.4 Administration-Related Issues</a></li><li class="self">B.1.4.1 How to Reset the Root Password</li>
+<li><a href="crashing.html">B.1.4.2 What to Do If MySQL Keeps Crashing</a></li>
+<li><a href="full-disk.html">B.1.4.3 How MySQL Handles a Full Disk</a></li>
+<li><a href="temporary-files.html">B.1.4.4 Where MySQL Stores Temporary Files</a></li>
+<li><a href="problems-with-mysql-sock.html">B.1.4.5 How to Protect or Change the MySQL Unix Socket File</a></li>
+<li><a href="timezone-problems.html">B.1.4.6 Time Zone Problems</a></li>
+</ul>
+
+			</ul>		
+	</div>
+
+</div>
+<!--/UdmComment-->
+
+
+
+
+	<div class="section" lang="en">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="resetting-permissions"></a>B.1.4.1. How to Reset the Root Password</h4></div></div></div>
+<div class="toc"><p><small>[<a href="#nolinkhere" class="tocdetail" onclick="toggle('tocdetail-0');" onkeypress="if (event.keyCode == 13) { toggle('tocdetail-0');}">+/-</a>]</small></p><dl id="tocdetail-0">
+<dt><span class="section"><a href="resetting-permissions.html#resetting-permissions-windows">B.1.4.1.1. Resetting the Root Password on Windows Systems</a></span></dt>
+<dt><span class="section"><a href="resetting-permissions.html#resetting-permissions-unix">B.1.4.1.2. Resetting the Root Password on Unix Systems</a></span></dt>
+</dl></div>
+<a class="indexterm" name="id2892796"></a><a class="indexterm" name="id2892808"></a><a class="indexterm" name="id2892820"></a><a class="indexterm" name="id2892833"></a><p>
+          If you have never set a <code class="literal">root</code> password for
+          MySQL, the server does not require a password at all for
+          connecting as <code class="literal">root</code>. However, it is
+          recommended to set a password for each account. See
+          <a href="security-guidelines.html" title="5.3.1. General Security Guidelines">Section 5.3.1, “General Security Guidelines”</a>.
+        </p>
+<p>
+          If you set a <code class="literal">root</code> password previously, but
+          have forgotten what it was, you can set a new password. The
+          next two sections show procedures for Windows and Unix
+          systems, respectively.
+        </p>
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="resetting-permissions-windows"></a>B.1.4.1.1. Resetting the Root Password on Windows Systems</h5></div></div></div>
+<p>
+            The procedure for resetting the MySQL root account's
+            password on Windows is as follows:
+          </p>
+<div class="orderedlist"><ol type="1">
+<li><p>
+                Log on to your system as Administrator.
+              </p></li>
+<li>
+<p>
+                Stop the MySQL server if it is running. For a server
+                that is running as a Windows service, go to the Services
+                manager:
+              </p>
+<pre class="programlisting">Start Menu -&gt; Control Panel -&gt; Administrative Tools -&gt; Services
+</pre>
+<p>
+                Then find the MySQL service in the list, and stop it.
+              </p>
+<p>
+                If your server is not running as a service, you may need
+                to use the Task Manager to force it to stop.
+              </p>
+</li>
+<li>
+<p>
+                Create a text file and place the following command
+                within it on a single line:
+              </p>
+<pre class="programlisting">SET PASSWORD FOR 'root'@'localhost' = PASSWORD('MyNewPassword');
+</pre>
+<p>
+                Save the file with any name. For this example the file
+                will be <code class="filename">C:\mysql-init.txt</code>.
+              </p>
+</li>
+<li>
+<p>
+                Open a console window to get to the DOS command prompt:
+              </p>
+<pre class="programlisting">Start Menu -&gt; Run -&gt; cmd
+</pre>
+</li>
+<li>
+<p>
+                We are assuming that you installed MySQL to
+                <code class="filename">C:\mysql</code>. If you installed MySQL to
+                another location, adjust the following commands
+                accordingly.
+              </p>
+<p>
+                At the DOS command prompt, execute this command:
+              </p>
+<pre class="programlisting">C:\&gt; <strong class="userinput"><code>C:\mysql\bin\mysqld-nt --init-file=C:\mysql-init.txt</code></strong>
+</pre>
+<p>
+                The contents of the file named by the
+                <code class="option">--init-file</code> option are executed at
+                server startup, changing the <code class="literal">root</code>
+                password. After the server has started successfully, you
+                should delete <code class="filename">C:\mysql-init.txt</code>.
+              </p>
+<p>
+                If you install MySQL using the MySQL Installation
+                Wizard, you may need to specify a
+                <code class="option">--defaults-file</code> option:
+              </p>
+<pre class="programlisting">C:\&gt; <strong class="userinput"><code>"C:\Program Files\MySQL\MySQL Server 5.0\bin\mysqld-nt.exe"</code></strong>
+         <strong class="userinput"><code>--defaults-file="C:\Program Files\MySQL\MySQL Server 5.0\my.ini"</code></strong>
+         <strong class="userinput"><code>--init-file=C:\mysql-init.txt</code></strong>
+</pre>
+<p>
+                The appropriate <code class="option">--defaults-file</code> setting
+                can be found using the Services Manager:
+              </p>
+<pre class="programlisting">Start Menu -&gt; Control Panel -&gt; Administrative Tools -&gt; Services
+</pre>
+<p>
+                Find the MySQL service in the list, right-click on it,
+                and choose the <code class="literal">Properties</code> option. The
+                <code class="literal">Path to executable</code> field contains the
+                <code class="option">--defaults-file</code> setting.
+              </p>
+</li>
+<li><p>
+                Stop the MySQL server, then restart it in normal mode
+                again. If you run the server as a service, start it from
+                the Windows Services window. If you start the server
+                manually, use whatever command you normally use.
+              </p></li>
+<li><p>
+                You should be able to connect using the new password.
+              </p></li>
+</ol></div>
+</div>
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h5 class="title">
+<a name="resetting-permissions-unix"></a>B.1.4.1.2. Resetting the Root Password on Unix Systems</h5></div></div></div>
+<p class="mnmas"><b>MySQL Enterprise. </b>
+              For expert advice on security-related issues, subscribe to
+              the MySQL Enterprise Monitor. For more information, see
+              <a href="http://www.mysql.com/products/enterprise/advisors.html" target="_top">http://www.mysql.com/products/enterprise/advisors.html</a>.
+            </p>
+<p>
+            In a Unix environment, the procedure for resetting the MySQL
+            <code class="literal">root</code> password is as follows:
+          </p>
+<div class="orderedlist"><ol type="1">
+<li><p>
+                Log on to your system as either the Unix
+                <code class="literal">root</code> user or as the same user that
+                the <span><strong class="command">mysqld</strong></span> server runs as.
+              </p></li>
+<li>
+<p>
+                Locate the <code class="filename">.pid</code> file that contains
+                the server's process ID. The exact location and name of
+                this file depend on your distribution, hostname, and
+                configuration. Common locations are
+                <code class="filename">/var/lib/mysql/</code>,
+                <code class="filename">/var/run/mysqld/</code>, and
+                <code class="filename">/usr/local/mysql/data/</code>. Generally,
+                the filename has the extension of
+                <code class="filename">.pid</code> and begins with either
+                <code class="filename">mysqld</code> or your system's hostname.
+              </p>
+<p>
+                You can stop the MySQL server by sending a normal
+                <code class="literal">kill</code> (not <code class="literal">kill -9</code>)
+                to the <span><strong class="command">mysqld</strong></span> process, using the
+                pathname of the <code class="filename">.pid</code> file in the
+                following command:
+              </p>
+<pre class="programlisting">shell&gt; <strong class="userinput"><code>kill `cat /mysql-data-directory/host_name.pid`</code></strong>
+</pre>
+<p>
+                Note the use of backticks rather than forward quotes
+                with the <code class="literal">cat</code> command; these cause the
+                output of <code class="literal">cat</code> to be substituted into
+                the <code class="literal">kill</code> command.
+              </p>
+</li>
+<li>
+<p>
+                Create a text file and place the following command
+                within it on a single line:
+              </p>
+<pre class="programlisting">SET PASSWORD FOR 'root'@'localhost' = PASSWORD('MyNewPassword');
+</pre>
+<p>
+                Save the file with any name. For this example the file
+                will be <code class="filename">~/mysql-init</code>.
+              </p>
+</li>
+<li>
+<p>
+                Restart the MySQL server with the special
+                <code class="option">--init-file=~/mysql-init</code> option:
+              </p>
+<pre class="programlisting">shell&gt; <strong class="userinput"><code>mysqld_safe --init-file=~/mysql-init &amp;</code></strong>
+</pre>
+<p>
+                The contents of the init-file are executed at server
+                startup, changing the root password. After the server
+                has started successfully you should delete
+                <code class="filename">~/mysql-init</code>.
+              </p>
+</li>
+<li><p>
+                You should be able to connect using the new password.
+              </p></li>
+</ol></div>
+<p>
+            Alternatively, on any platform, you can set the new password
+            using the <span><strong class="command">mysql</strong></span> client(but this approach
+            is less secure):
+          </p>
+<div class="orderedlist"><ol type="1">
+<li><p>
+                Stop <span><strong class="command">mysqld</strong></span> and restart it with the
+                <code class="option">--skip-grant-tables --user=root</code> options
+                (Windows users omit the <code class="option">--user=root</code>
+                portion).
+              </p></li>
+<li>
+<p>
+                Connect to the <span><strong class="command">mysqld</strong></span> server with
+                this command:
+              </p>
+<pre class="programlisting">shell&gt; <strong class="userinput"><code>mysql -u root</code></strong>
+</pre>
+</li>
+<li>
+<p>
+                Issue the following statements in the
+                <span><strong class="command">mysql</strong></span> client:
+              </p>
+<pre class="programlisting">mysql&gt; <strong class="userinput"><code>UPDATE mysql.user SET Password=PASSWORD('<em class="replaceable"><code>newpwd</code></em>')</code></strong>
+    -&gt;                   <strong class="userinput"><code>WHERE User='root';</code></strong>
+mysql&gt; <strong class="userinput"><code>FLUSH PRIVILEGES;</code></strong>
+</pre>
+<p>
+                Replace “<span class="quote"><em class="replaceable"><code>newpwd</code></em></span>”
+                with the actual <code class="literal">root</code> password that
+                you want to use.
+              </p>
+</li>
+<li><p>
+                You should be able to connect using the new password.
+              </p></li>
+</ol></div>
+</div>
+</div>
+<!--UdmComment--><div id="docnav"><a rel="prev" href="administration-issues.html" title="B.1.4 Administration-Related Issues">Previous</a> / <a rel="next" href="crashing.html" title="B.1.4.2 What to Do If MySQL Keeps Crashing">Next</a> / <a rel="up" href="administration-issues.html" title="B.1.4 Administration-Related Issues">Up</a> / <a rel="contents" href="index.html">Table of Contents</a></div><!--/UdmComment--><br class="clear" /><!--UdmComment--><div id="comments"><h2>User Comments</h2><table id="c5496" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Annadata Prasad on January 3 2005 4:36pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=5496&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=5496">Edit</a>]</td></tr></table><p class="commenttext">Version 4.1.8.  With this version the given command <br /><br />mysqld_safe --skip-grant-tables &amp;<br /><br />does not work as is.  As soon as you enter the command, mysqld_safe quits.   This is because, with 4.1.8 they have put security check to see if mysql is being run as root.  So, it needs to be explicity specified that it needs to be run as root.  So, everything else in the given instruction remains the same.  Insted of the above command run<br /><br />mysqld_safe --skip-grant-tables -u root &amp;<br /><br /><br /><br /><br /></p><table id="c5633" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Darrell Duane on January 24 2005 7:14pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=5633&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=5633">Edit</a>]</td></tr></table><p class="commenttext">Actually, with MySQL 4.1.8 I found that to get the user to be root I had to start it like this:  <br />mysqld_safe --skip-grant-tables --user=root &amp;<br /><br />Note also that the password is what is enclosed in double quotes above, and remember that you won't be able to log in with the new password until the MySQL daemon is restarted, reloading user table into memory.<br /></p><table id="c5675" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Dino Tsoumakis on February 3 2005 7:48am</td><td align="right">[<a href="/doc/mysql/comment.php?id=5675&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=5675">Edit</a>]</td></tr></table><p class="commenttext">If you upgrade from MySQL 3 to MySQL 4.1 without updating Grant Tables, MySQL uses the old password hashing mechanism by default.<br />But if you start it with '--skip-grant-tables' it uses the new password hashing mechanism!<br />To be able to reset your root password, you must add the '--old-passwords' option, e.g.:<br />mysqld_safe --skip-grant-tables --old-passwords &amp;<br /><br /><br /></p><table id="c5738" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Schneelocke  on February 16 2005 1:31pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=5738&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=5738">Edit</a>]</td></tr></table><p class="commenttext">On Windows installations, it is also possible to disable grant table loading and restart the server using the MySQL System Tray Monitor (the relevant option is under Configure Instance-&gt;Startup Variables-&gt;Security).<br /><br />I got all sorts of unhelpful error messages when trying to reset the root password on the console as described, but using the System Tray monitor and the graphical MySQL Administrator worked flawlessly.<br /><br /></p><table id="c6745" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Andrew Foster on October 25 2005 3:29am</td><td align="right">[<a href="/doc/mysql/comment.php?id=6745&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=6745">Edit</a>]</td></tr></table><p class="commenttext">When resetting the root password on a Unix system, be sure to supply the --init-file argument with the _full_ system path to the file, regardless of your current working directory.<br /></p><table id="c6932" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Gal Aviel on November 30 2005 7:35pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=6932&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=6932">Edit</a>]</td></tr></table><p class="commenttext">Here's another pitfall.<br />Remember, that the init file has to be readable<br />by the process 'mysqld' is running as. In my case, a RedHat9<br />machine, it's running as user 'mysql' (although initially launched by/as user root). <br /><br />BUT I named the init<br />file /root/init.txt which is not readable by user 'mysql' (no permissions) !<br /><br />What's worse, the error message in the log file was cryptic<br />and did not say &quot;can't read file because permission denied&quot; rather &quot;can't find file ..&quot;<br />.. go figure.<br /><br />Buttom line, put the file in a public place that mysql can see or else you'll get a cryptic error message.<br /></p><table id="c7029" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Martin Kestel on December 27 2005 6:59pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=7029&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=7029">Edit</a>]</td></tr></table><p class="commenttext">On Fedora Core 3 the command to start mysqld manually is 'safe_mysqld' (not: 'mysqld_safe'). <br /></p><table id="c7164" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Donny Widjaja on February 1 2006 7:07am</td><td align="right">[<a href="/doc/mysql/comment.php?id=7164&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=7164">Edit</a>]</td></tr></table><p class="commenttext">If you need to reset the password in Windows environment, under step number 5.  You can add &quot;--console&quot; at the end of the command to show the output in your console instead of logfile.<br />For example: <br />C:\&gt; &quot;C:\Program Files\MySQL\MySQL Server 5.0\bin\mysqld-nt.exe&quot; <br />--defaults-file=&quot;C:\Program Files\MySQL\MySQL Server 5.0\my.ini&quot; <br />--init-file=C:\mysql-init.txt --console<br /><br />If you have your server setup correctly, you will see:<br />060201  0:53:44 [Note] mysqld-nt: ready for connections.<br />Version: '5.0.18-nt'  socket: ''  port: 3306  MySQL Community Edition (GPL)<br /><br />In step number 6, where you need to shutdown the server, you can open another windows cmd console (Start Menu -&gt; Run -&gt; cmd).  <br />Use &quot;mysqladmin -u root -p shutdown&quot; to shutdown the MySQL server.  It will prompt you to enter a password, and you can enter the password you specified in the mysql-init.txt file.<br /></p><table id="c7908" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Carlos Guerrero on August 17 2006 4:39am</td><td align="right">[<a href="/doc/mysql/comment.php?id=7908&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=7908">Edit</a>]</td></tr></table><p class="commenttext">Thanks to all:<br /><br />I have been banging my head for the past 2 days trying to get around this stupid error:<br /> <br />mysqladmin: connect to server at 'localhost' failed error: 'Access denied for user 'root'@'localhost' (using password: NO)'<br /><br />Just make sure to use the command as stated by the first comment:<br /><br />root@ubuntu:~# mysqld_safe --skip-grant-tables -u root &amp;<br /><br />Thanks again.<br /><br />Carlos.<br /></p><table id="c7942" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by les hawkins on August 26 2006 4:02pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=7942&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=7942">Edit</a>]</td></tr></table><p class="commenttext">Trying to be good I had deleted root but then found when I needed super privideges that no user had them - my fault  I know but I think an easy mistake to make (I am using SUSE 10.1). The skip grant options worked but I had to FLUSH Privileges before trying to change any access permissions - otherwise they can't be effective. The statement to make a super user is <br />GRANT ALL PRIVILEGES ON *.* TO 'USERNAME' @ 'localhost' WITH  GRANT OPTION MAX QUERIES PER HOUR 0 MAX CONNECTIONS PER HOUR 0 MAX_UPDATES PER HOUR 0 MAX_USER_CONNECTIONS 0;<br /><br />The stop command for SUSE 10.1 is kill `cat /var/lib/mysql/mysqld.pid`<br />after restart of mysqld I had to open a new terminal to log on to the server ..<br />Clearly skip grant tables is terribly insecure as any user can do anything while it is operation. Hope it helps someone <br /></p><table id="c7988" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Mark Garner on September 11 2006 6:06am</td><td align="right">[<a href="/doc/mysql/comment.php?id=7988&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=7988">Edit</a>]</td></tr></table><p class="commenttext">Amen to Schneelocke for the Windows installations/ using the MySQL System Tray Monitor option.<br /><br />I've been trying to resolve this for the past week, been going thru dozens of forums and posts trying to get an answer.<br /><br />Did what Scheenllocke said and it worked instantly.<br /><br />PS Judging by what I've seen in other posts this whole local connection password thing is a major issue for newcomers.<br /><br />Might be an idea if someone could make it a easy to find topic and solution in the manual.<br /></p><table id="c8006" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Laurent MIMOUN on September 16 2006 1:46pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=8006&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=8006">Edit</a>]</td></tr></table><p class="commenttext">Yes I confirm the init file path must be explicit. ~/init.txt is bad !<br /></p><table id="c8067" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by arthur brogard on October 16 2006 3:40am</td><td align="right">[<a href="/doc/mysql/comment.php?id=8067&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=8067">Edit</a>]</td></tr></table><p class="commenttext">Yes, I've been hassled with this for the last two weeks... reading heaps and getting nowhere. <br /><br /> I found downloading and installing mysql gui tools was the answer. I only needed to insert the correct root password it turned out. When I ever changed it I've got no idea but mysql admin helped me sort it out in seconds....<br /><br /> :)<br /><br /></p><table id="c8190" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by mark garey on November 16 2006 7:19pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=8190&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=8190">Edit</a>]</td></tr></table><p class="commenttext">my experience was that if you start mysql with --skip-grant-tables and <br />--user=root, mysql will set the ownership of the log file to root:root<br />and after you have reset your root password and start mysql again<br />normally, the startup will fail because of the permissions on that log<br />file. the fix is to chown the log file back to user mysql:mysql and start again.<br />fwiw, because of the permissions you get the &quot;file not found&quot; error<br />mentioned above. check the error log file for details e.g.:<br /><br />/usr/local/mysql-5.0.22/libexec/mysqld: File './mysql-bin.000087' not found (Errcode: 13)<br />061115 17:08:35 [ERROR] Failed to open log (file './mysql-bin.000087', <br />errno 13)<br />061115 17:08:35 [ERROR] Could not open log file<br />061115 17:08:35 [ERROR] Can't init tc log<br />061115 17:08:35 [ERROR] Aborting<br /><br />good luck!<br /><br />m+<br /></p><table id="c8246" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Aki Tuomi on December 11 2006 9:26pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=8246&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=8246">Edit</a>]</td></tr></table><p class="commenttext">Lost root privs somehow? Use this to restore full privs to 'root'@'localhost'. NOTE that you HAVE TO use SET PASSWORD to restore password for root. <br /><br />USE mysql;<br />REPLACE INTO user VALUES ('localhost','root','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','','','','',0,0,0,0);<br /><br />You can also add the password into this line, but that is left for the reader to find out how. <br /></p><table id="c8281" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Yoseff Francus on December 28 2006 4:37pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=8281&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=8281">Edit</a>]</td></tr></table><p class="commenttext">The problem with all the solutions other than the replace values is that mysql complains that it cannot fulfill the request to change a password while in safe mode since the where clause is not referencing a key column. Replace was the only way to get around it but it creates a second entry. What puzzles me is that the password should have remained after moving to mysql5 from mysql4<br /></p><table id="c8332" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Sjolus  on January 22 2007 12:44pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=8332&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=8332">Edit</a>]</td></tr></table><p class="commenttext">If you use PhpMyAdmin, don't forget to edit config.inc.php to match your new password as well, even if this doesn't fit on the mysql-site, it is still worth mentioning. At least it haunted me for 30 stressful minutes.<br /></p><table id="c8564" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Dennis Miller on April 22 2007 11:34pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=8564&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=8564">Edit</a>]</td></tr></table><p class="commenttext">Thank you,<br />This worked as stated in my Windows XP Pro environment.<br /></p><table id="c8896" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Roger Pack on September 12 2007 11:54pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=8896&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=8896">Edit</a>]</td></tr></table><p class="commenttext">If you are installing a 'second concurrent' version on a different port then you may need to add &quot;--port=XXX --protocol=TCP&quot; to each script. GL!<br /></p><table id="c8972" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Roger Pack on October 17 2007 2:50pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=8972&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=8972">Edit</a>]</td></tr></table><p class="commenttext">Also works to change the root password -- start mysql normall (mysql -uroot -p) then execute<br />SET PASSWORD FOR 'root'@'localhost' = PASSWORD('MyNewPassword');<br /><br />(also works for blank passwords -- use '')<br /></p><table id="c9002" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Celeste Kumelos on October 24 2007 12:07am</td><td align="right">[<a href="/doc/mysql/comment.php?id=9002&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=9002">Edit</a>]</td></tr></table><p class="commenttext">I did figure it out and it was just like this.<br /><br />[root@D2645 ~]# killall mysqld<br />[root@D2645 ~]# /usr/libexec/mysqld --skip-grant-tables --user=root &amp;<br />[1] 16941<br />[root@D2645 ~]# 071023 18:59:17  InnoDB: Started; log sequence number 0 43665<br />071023 18:59:17 [Note] /usr/libexec/mysqld: ready for connections.<br />Version: '5.0.27'  socket: '/var/lib/mysql/mysql.sock'  port: 3306  Source distribution<br />mysql<br />Welcome to the MySQL monitor.  Commands end with ; or \g.<br />Your MySQL connection id is 1 to server version: 5.0.27<br /><br />Type 'help;' or '\h' for help. Type '\c' to clear the buffer.<br /><br />mysql&gt; USE mysql<br />Reading table information for completion of table and column names<br />You can turn off this feature to get a quicker startup with -A<br /><br />Database changed<br /><br />mysql&gt; update user set password=password(&quot;YOUSETPASSWORD&quot;) Where user=&quot;root&quot;;<br />Query OK, 3 rows affected (0.00 sec)<br />Rows matched: 3  Changed: 3  Warnings: 0<br /><br />mysql&gt; flush privileges;<br />Query OK, 0 rows affected (0.00 sec)<br /><br />mysql&gt; exit<br />Bye<br />[root@D2645 ~]# killall mysqld<br />071023 19:00:57 [Note] /usr/libexec/mysqld: Normal shutdown<br /><br />[root@D2645 ~]# 071023 19:00:57  InnoDB: Starting shutdown...<br />071023 19:01:00  InnoDB: Shutdown completed; log sequence number 0 43665<br />071023 19:01:00 [Note] /usr/libexec/mysqld: Shutdown complete<br /><br />mysql<br />ERROR 2002 (HY000): Can't connect to local MySQL server through socket '/var/lib/mysql/mysql.sock' (2)<br />[1]+  Done                    /usr/libexec/mysqld --skip-grant-tables --user=root<br />[root@D2645 ~]# /etc/init.d/mysqld start<br />Starting MySQL:                                            [  OK  ]<br />[root@D2645 ~]# mysql -u root -p<br />Enter password:<br />Welcome to the MySQL monitor.  Commands end with ; or \g.<br />Your MySQL connection id is 2 to server version: 5.0.27<br /><br />Type 'help;' or '\h' for help. Type '\c' to clear the buffer.<br /><br /></p><table id="c9101" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Troy Murray on November 28 2007 8:17pm</td><td align="right">[<a href="/doc/mysql/comment.php?id=9101&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=9101">Edit</a>]</td></tr></table><p class="commenttext">I had this same problem, changing the password didn't fix my issue.  Turns out it wasn't an issue with the password, it was an issue with the HOST value for the ROOT, it had been changed from &quot;localhost&quot; to something else, so when I was trying to login from the localhost it would fail.<br /><br />I did the following on my Windows server to fix this:<br /><br />1.)  Downloaded the MySQL GUI Tools<br />2.)  Installed the MySQL GUI Tools<br />3.)  Opened MySQL System Tray Monitor<br />4.)  Select the &quot;Startup Variables&quot;<br />5.)  Go to the &quot;Security&quot; tab<br />6.)  Check &quot;Disable grant tables&quot;<br />7.)  Click &quot;Apply Changes&quot;<br />8.)  Open a Command Prompt (Start --&gt; Run --&gt; cmd --&gt; OK)<br />9.)  Type: NET STOP &quot;MySQL&quot; &amp;&amp; NET START &quot;MySQL&quot;<br />10.)  Type: mysql -u root mysql<br />11.) UPDATE<br />          user<br />        SET<br />          host = 'localhost'<br />          and password = PASSWORD('your new password here')<br />        WHERE<br />          user = 'root';<br />12.) FLUSH PRIVILEGES;<br />13.) EXIT;<br />14.) Go back to MySQL System Tray Monitor<br />15.)  Select the &quot;Startup Variables&quot;<br />16.)  Go to the &quot;Security&quot; tab<br />17.) Uncheck &quot;Disable grant tables&quot;<br />18.) Click &quot;Apply Changes&quot;<br />19.) Go back to Command Prompt<br />20.) Type: NET STOP &quot;MySQL&quot; &amp;&amp; NET START &quot;MySQL&quot;<br /><br />You should now be able to login as the root with the new password from the localhost.<br /></p><table id="c9159" class="commentdetails" summary="" width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td>Posted by Susam Pal on December 19 2007 8:19am</td><td align="right">[<a href="/doc/mysql/comment.php?id=9159&amp;action=delete">Delete</a>] [<a href="/doc/mysql/comment.php?id=9159">Edit</a>]</td></tr></table><p class="commenttext">While trying the init file to reset the password, relative path for init file does not work in Debian Etch 4.0. Hence, one must provide the absolute path to the file.<br /><br />For example, the following doesn't work.<br /><br />mysqld_safe --init-file=mysql-init.txt<br /><br />But, the following works.<br /><br />mysqld_safe --init-file=/home/susam/mysql-init.txt<br /></p><p><a href="/doc/mysql/comment.php?sect=resetting-permissions">Add your own comment.</a></p></div><!--UdmComment--><div id="docnav"><a href="#">Top</a> / <a rel="prev" href="administration-issues.html" title="B.1.4 Administration-Related Issues">Previous</a> / <a rel="next" href="crashing.html" title="B.1.4.2 What to Do If MySQL Keeps Crashing">Next</a> / <a rel="up" href="administration-issues.html" title="B.1.4 Administration-Related Issues">Up</a> / <a rel="contents" href="index.html">Table of Contents</a></div><!--/UdmComment--></div></div>
+
+
+
+
+
+
+<!--UdmComment-->
+ <div id="footer">
+  <div id="copyright">&copy; 1995-2008 MySQL AB. All rights reserved.</div>
+     <ul>
+ 		<li><a href="https://shop.mysql.com">Online Shop</a></li>
+		<li><a href="http://www.mysql.com/sitemap.html">Site Map</a></li>
+		<li><a href="http://www.mysql.com/about/legal/">Legal</a></li>
+		<li><a href="http://www.mysql.com/about/legal/mysql_web_privacy_policy.html">Privacy Policy</a></li>
+ 		<li><a href="http://www.mysql.com/about/contact/">Contact Us</a></li> 
+		<li class="last"><a href="http://www.mysql.com/about/jobs/">Job Opportunities</a></li> 
+     </ul>
+
+</div> <!--/UdmComment-->
+
+ </div> 
+</div> </div> 
+
+		<script src="http://www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+	_uacct = "UA-225536-3";
+	_udn="mysql.com";	
+	urchinTracker();
+	</script>	
+
+</body>
+</html>

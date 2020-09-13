@@ -1,0 +1,9 @@
+How to connect to MYSQL?
+------------------------
+1. Unzip xampplites, Open setup_xampp.bat, if there are asking for refresh, just press 1 and enter to refresh it. 
+
+Make sure 3306 port have not used by other software 
+
+2. Open xampp-control.exe and press MYSQL"START button", and make sure don't stick on the SVC checkbox and it's not selected. If succesfully,u will realize a green box that stated "RUNNING" appear between  MYSQL and the start button.
+
+DONE!!

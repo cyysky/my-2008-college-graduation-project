@@ -1,0 +1,13 @@
+/* bidwar */
+.bidwar {margin:0 0 0px 0;background-color:#fff;border:0;}
+.bwp {font:76%/1.3em Verdana, sans-serif;margin:0;}
+.bwp * {margin:0;padding:0;}
+.bwp a {text-decoration:none;color:#004d99;}
+.bwp h2 {background:url(http://i.zdnet.com/images/200803/bkg_dblBtmBrd.gif) 0 bottom repeat-x;color:#8d0000;padding:12px 8px;font:normal 1.65em/1.15em Georgia,serif;}
+.bwp ul {list-style-type:none;margin:8px 0;}
+.bwp ul li {background:url(http://i.zdnet.com/images/200803/icn_bullet.gif) 0 4px no-repeat;padding:0 0 0 17px;margin:6px 8px;}
+.bwp p {margin:8px;font-size:.9em;}
+.bwp .bwtitle {font-weight:bold;}
+.bwp .bwtext {color:#000;}
+.bwp .bwurl {color:#898989;font-size:.9em;}
+.bwp .bwrlink {display:none;}

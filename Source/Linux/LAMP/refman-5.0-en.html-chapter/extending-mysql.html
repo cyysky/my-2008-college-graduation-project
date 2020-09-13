@@ -1,0 +1,2130 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>Chapter 26. Extending MySQL</title><link rel="stylesheet" href="mysql-html.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.69.1"><link rel="start" href="index.html" title="MySQL 5.0 Reference Manual"><link rel="up" href="index.html" title="MySQL 5.0 Reference Manual"><link rel="prev" href="mysql-proxy.html" title="Chapter 25. MySQL Proxy"><link rel="next" href="faqs.html" title="Appendix A. MySQL 5.0 Frequently Asked Questions"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 26. Extending MySQL</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mysql-proxy.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="faqs.html">Next</a></td></tr></table><hr></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="extending-mysql"></a>Chapter 26. Extending MySQL</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="extending-mysql.html#mysql-internals">26.1. MySQL Internals</a></span></dt><dd><dl><dt><span class="section"><a href="extending-mysql.html#mysql-threads">26.1.1. MySQL Threads</a></span></dt><dt><span class="section"><a href="extending-mysql.html#mysql-test-suite">26.1.2. MySQL Test Suite</a></span></dt></dl></dd><dt><span class="section"><a href="extending-mysql.html#adding-functions">26.2. Adding New Functions to MySQL</a></span></dt><dd><dl><dt><span class="section"><a href="extending-mysql.html#udf-features">26.2.1. Features of the User-Defined Function Interface</a></span></dt><dt><span class="section"><a href="extending-mysql.html#create-function">26.2.2. <code class="literal">CREATE FUNCTION</code> Syntax</a></span></dt><dt><span class="section"><a href="extending-mysql.html#drop-function">26.2.3. <code class="literal">DROP FUNCTION</code> Syntax</a></span></dt><dt><span class="section"><a href="extending-mysql.html#adding-udf">26.2.4. Adding a New User-Defined Function</a></span></dt><dt><span class="section"><a href="extending-mysql.html#adding-native-function">26.2.5. Adding a New Native Function</a></span></dt></dl></dd><dt><span class="section"><a href="extending-mysql.html#adding-procedures">26.3. Adding New Procedures to MySQL</a></span></dt><dd><dl><dt><span class="section"><a href="extending-mysql.html#procedure-analyse">26.3.1. <code class="literal">PROCEDURE ANALYSE</code></a></span></dt><dt><span class="section"><a href="extending-mysql.html#writing-a-procedure">26.3.2. Writing a Procedure</a></span></dt></dl></dd><dt><span class="section"><a href="extending-mysql.html#porting">26.4. Debugging and Porting MySQL</a></span></dt><dd><dl><dt><span class="section"><a href="extending-mysql.html#debugging-server">26.4.1. Debugging a MySQL Server</a></span></dt><dt><span class="section"><a href="extending-mysql.html#debugging-client">26.4.2. Debugging a MySQL Client</a></span></dt><dt><span class="section"><a href="extending-mysql.html#the-dbug-package">26.4.3. The DBUG Package</a></span></dt><dt><span class="section"><a href="extending-mysql.html#rts-threads">26.4.4. Comments about RTS Threads</a></span></dt><dt><span class="section"><a href="extending-mysql.html#thread-packages">26.4.5. Differences Between Thread Packages</a></span></dt></dl></dd></dl></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="mysql-internals"></a>26.1. MySQL Internals</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="extending-mysql.html#mysql-threads">26.1.1. MySQL Threads</a></span></dt><dt><span class="section"><a href="extending-mysql.html#mysql-test-suite">26.1.2. MySQL Test Suite</a></span></dt></dl></div><a class="indexterm" name="id4642456"></a><a class="indexterm" name="id4642465"></a><p>
+      This chapter describes a lot of things that you need to know when
+      working on the MySQL code. If you plan to contribute to MySQL
+      development, want to have access to the bleeding-edge versions of
+      the code, or just want to keep track of development, follow the
+      instructions in <a href="installing.html#installing-source-tree" title="2.4.15.3. Installing from the Development Source Tree">Section 2.4.15.3, “Installing from the Development Source Tree”</a>. If you
+      are interested in MySQL internals, you should also subscribe to
+      our <code class="literal">internals</code> mailing list. This list has
+      relatively low traffic. For details on how to subscribe, please
+      see <a href="introduction.html#mailing-lists" title="1.6.1. MySQL Mailing Lists">Section 1.6.1, “MySQL Mailing Lists”</a>. All developers at MySQL AB
+      are on the <code class="literal">internals</code> list and we help other
+      people who are working on the MySQL code. Feel free to use this
+      list both to ask questions about the code and to send patches that
+      you would like to contribute to the MySQL project!
+    </p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="mysql-threads"></a>26.1.1. MySQL Threads</h3></div></div></div><p>
+        The MySQL server creates the following threads:
+      </p><div class="itemizedlist"><ul type="disc"><li><p>
+            Connection manager threads handle client connection requests
+            on the network interfaces that the server listens to. On all
+            platforms, one manager thread handles TCP/IP connection
+            requests. On Unix, this manager thread also handles Unix
+            socket file connection requests. On Windows, a manager
+            thread handles shared-memory connection requests, and
+            another handles named-pipe connection requests. The server
+            does not create threads to handle interfaces that it does
+            not listen to. For example, a Windows server that does not
+            have support for named-pipe connections enabled does not
+            create a thread to handle them.
+          </p></li><li><p>
+            Connection manager threads associate each client connection
+            with a thread dedicated to it that handles authentication
+            and request processing for that connection. Manager threads
+            create a new thread when necessary but try to avoid doing so
+            by consulting the thread cache first to see whether it
+            contains a thread that can be used for the connection. When
+            a connection ends, its thread is returned to the thread
+            cache if the cache is not full.
+          </p><p>
+            For information about tuning the parameters that control
+            thread resources, see <a href="optimization.html#connection-threads" title="7.5.7. How MySQL Uses Threads for Client Connections">Section 7.5.7, “How MySQL Uses Threads for Client Connections”</a>.
+          </p></li><li><p>
+            On a master replication server, connections from slave
+            servers are handled like client connections: There is one
+            thread per connected slave.
+          </p></li><li><p>
+            On a slave replication server, an I/O thread is started to
+            connect to the master server and read updates from it. An
+            SQL thread is started to apply updates read from the master.
+            These two threads run independently and can be started and
+            stopped independently.
+          </p></li><li><p>
+            A signal thread handles all signals. This thread also
+            normally handles alarms and calls
+            <code class="literal">process_alarm()</code> to force timeouts on
+            connections that have been idle too long.
+          </p></li><li><p>
+            If <code class="literal">InnoDB</code> is used, there will be 4
+            additional threads by default. Those are file I/O threads,
+            controlled by the <code class="literal">innodb_file_io_threads</code>
+            parameter. See <a href="storage-engines.html#innodb-parameters" title="13.2.4. InnoDB Startup Options and System Variables">Section 13.2.4, “<code class="literal">InnoDB</code> Startup Options and System Variables”</a>.
+          </p></li><li><p>
+            If <span><strong class="command">mysqld</strong></span> is compiled with
+            <code class="option">-DUSE_ALARM_THREAD</code>, a dedicated thread that
+            handles alarms is created. This is only used on some systems
+            where there are problems with <code class="literal">sigwait()</code>
+            or if you want to use the <code class="literal">thr_alarm()</code>
+            code in your application without a dedicated signal handling
+            thread.
+          </p></li><li><p>
+            If the server is started with the
+            <code class="option">--flush_time=<em class="replaceable"><code>val</code></em></code>
+            option, a dedicated thread is created to flush all tables
+            every <em class="replaceable"><code>val</code></em> seconds.
+          </p></li><li><p>
+            Each table for which <code class="literal">INSERT DELAYED</code>
+            statements are issued gets its own thread. See
+            <a href="sql-syntax.html#insert-delayed" title="12.2.4.2. INSERT DELAYED Syntax">Section 12.2.4.2, “<code class="literal">INSERT DELAYED</code> Syntax”</a>.
+          </p></li></ul></div><p>
+        <span><strong class="command">mysqladmin processlist</strong></span> only shows the
+        connection, <code class="literal">INSERT DELAYED</code>, and replication
+        threads.
+      </p><p class="mnmas"><b>MySQL Enterprise</b>
+          For expert advice on thread management subscribe to the MySQL
+          Enterprise Monitor. For more information see,
+          <a href="http://www.mysql.com/products/enterprise/advisors.html" target="_top">http://www.mysql.com/products/enterprise/advisors.html</a>.
+        </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="mysql-test-suite"></a>26.1.2. MySQL Test Suite</h3></div></div></div><a class="indexterm" name="id4642717"></a><a class="indexterm" name="id4642730"></a><p>
+        The test system that is included in Unix source and binary
+        distributions makes it possible for users and developers to
+        perform regression tests on the MySQL code. These tests can be
+        run on Unix.
+      </p><p>
+        The current set of test cases doesn't test everything in MySQL,
+        but it should catch most obvious bugs in the SQL processing
+        code, operating system or library issues, and is quite thorough
+        in testing replication. Our goal is to have the tests cover 100%
+        of the code. We welcome contributions to our test suite. You may
+        especially want to contribute tests that examine the
+        functionality critical to your system because this ensures that
+        all future MySQL releases work well with your applications.
+      </p><p>
+        The test system consists of a test language interpreter
+        (<span><strong class="command">mysqltest</strong></span>), a Perl script to run all tests
+        (<span><strong class="command">mysql-test-run.pl</strong></span>), the actual test cases
+        written in a special test language, and their expected results.
+        To run the test suite on your system after a build, type
+        <span><strong class="command">make test</strong></span> from the source root directory, or
+        change location to the <code class="filename">mysql-test</code> directory
+        and type <span><strong class="command">./mysql-test-run.pl</strong></span>. If you have
+        installed a binary distribution, change location to the
+        <code class="filename">mysql-test</code> directory under the installation
+        root directory (for example,
+        <code class="filename">/usr/local/mysql/mysql-test</code>), and run
+        <span><strong class="command">./mysql-test-run.pl</strong></span>. All tests should
+        succeed. If any do not, feel free to try to find out why and
+        report the problem if it indicates a bug in MySQL. See
+        <a href="introduction.html#bug-reports" title="1.7. How to Report Bugs or Problems">Section 1.7, “How to Report Bugs or Problems”</a>.
+      </p><p>
+        If one test fails, you should run
+        <span><strong class="command">mysql-test-run.pl</strong></span> with the
+        <code class="option">--force</code> option to check whether any other tests
+        fail.
+      </p><p>
+        If you have a copy of <span><strong class="command">mysqld</strong></span> running on the
+        machine where you want to run the test suite, you do not have to
+        stop it, as long as it is not using ports
+        <code class="literal">9306</code> or <code class="literal">9307</code>. If either of
+        those ports is taken, you should set the
+        <code class="literal">MTR_BUILD_THREAD</code> environment variable to an
+        appropriate value, and the test suite will use a different set
+        of ports for master, slave, NDB, and Instance Manager). For
+        example:
+      </p><pre class="programlisting">shell&gt; export MTR_BUILD_THREAD=31
+shell&gt; ./mysql-test-run.pl [<em class="replaceable"><code>options</code></em>] [<em class="replaceable"><code>test_name</code></em>]
+</pre><p>
+        In the <code class="filename">mysql-test</code> directory, you can run an
+        individual test case with <span><strong class="command">./mysql-test-run.pl
+        <em class="replaceable"><code>test_name</code></em></strong></span>.
+      </p><p>
+        You can use the <span><strong class="command">mysqltest</strong></span> language to write
+        your own test cases. This is documented in the MySQL Test
+        Framework manual, available at <a href="http://dev.mysql.com/doc/" target="_top">http://dev.mysql.com/doc/</a>.
+      </p><p>
+        If you have a question about the test suite, or have a test case
+        to contribute, send an email message to the MySQL
+        <code class="literal">internals</code> mailing list. See
+        <a href="introduction.html#mailing-lists" title="1.6.1. MySQL Mailing Lists">Section 1.6.1, “MySQL Mailing Lists”</a>. This list does not accept
+        attachments, so you should FTP all the relevant files to:
+        <a href="ftp://ftp.mysql.com/pub/mysql/upload/" target="_top">ftp://ftp.mysql.com/pub/mysql/upload/</a>
+      </p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="adding-functions"></a>26.2. Adding New Functions to MySQL</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="extending-mysql.html#udf-features">26.2.1. Features of the User-Defined Function Interface</a></span></dt><dt><span class="section"><a href="extending-mysql.html#create-function">26.2.2. <code class="literal">CREATE FUNCTION</code> Syntax</a></span></dt><dt><span class="section"><a href="extending-mysql.html#drop-function">26.2.3. <code class="literal">DROP FUNCTION</code> Syntax</a></span></dt><dt><span class="section"><a href="extending-mysql.html#adding-udf">26.2.4. Adding a New User-Defined Function</a></span></dt><dt><span class="section"><a href="extending-mysql.html#adding-native-function">26.2.5. Adding a New Native Function</a></span></dt></dl></div><a class="indexterm" name="id4642939"></a><a class="indexterm" name="id4642951"></a><a class="indexterm" name="id4642963"></a><a class="indexterm" name="id4642976"></a><a class="indexterm" name="id4642988"></a><p>
+      There are three ways to add new functions to MySQL:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          You can add functions through the user-defined function (UDF)
+          interface. User-defined functions are compiled as object files
+          and then added to and removed from the server dynamically
+          using the <code class="literal">CREATE FUNCTION</code> and <code class="literal">DROP
+          FUNCTION</code> statements. See
+          <a href="extending-mysql.html#create-function" title="26.2.2. CREATE FUNCTION Syntax">Section 26.2.2, “<code class="literal">CREATE FUNCTION</code> Syntax”</a>.
+        </p></li><li><p>
+          You can add functions as native (built-in) MySQL functions.
+          Native functions are compiled into the
+          <span><strong class="command">mysqld</strong></span> server and become available on a
+          permanent basis.
+        </p></li><li><p>
+          Another way to add functions is by creating stored functions.
+          These are written using SQL statements rather than by
+          compiling object code. The syntax for writing stored functions
+          is not covered here. See <a href="stored-procedures.html" title="Chapter 18. Stored Procedures and Functions">Chapter 18, <i>Stored Procedures and Functions</i></a>.
+        </p></li></ul></div><p>
+      Each method of creating compiled functions has advantages and
+      disadvantages:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+          If you write user-defined functions, you must install object
+          files in addition to the server itself. If you compile your
+          function into the server, you don't need to do that.
+        </p></li><li><p>
+          Native functions require you to modify a source distribution.
+          UDFs do not. You can add UDFs to a binary MySQL distribution.
+          No access to MySQL source is necessary.
+        </p></li><li><p>
+          If you upgrade your MySQL distribution, you can continue to
+          use your previously installed UDFs, unless you upgrade to a
+          newer version for which the UDF interface changes. For native
+          functions, you must repeat your modifications each time you
+          upgrade.
+        </p></li></ul></div><p>
+      Whichever method you use to add new functions, they can be invoked
+      in SQL statements just like native functions such as
+      <a href="functions.html#function_abs"><code class="literal">ABS()</code></a> or
+      <a href="functions.html#function_soundex"><code class="literal">SOUNDEX()</code></a>.
+    </p><p>
+      See <a href="language-structure.html#function-resolution" title="8.2.3. Function Name Parsing and Resolution">Section 8.2.3, “Function Name Parsing and Resolution”</a>, for the rules
+      describing how the server interprets references to different kinds
+      of functions.
+    </p><p>
+      The following sections describe features of the UDF interface,
+      provide instructions for writing UDFs, discuss security
+      precautions that MySQL takes to prevent UDF misuse, and describe
+      how to add native MySQL functions.
+    </p><p>
+      For example source code that illustrates how to write UDFs, take a
+      look at the <code class="filename">sql/udf_example.c</code> file that is
+      provided in MySQL source distributions.
+    </p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="udf-features"></a>26.2.1. Features of the User-Defined Function Interface</h3></div></div></div><p>
+        The MySQL interface for user-defined functions provides the
+        following features and capabilities:
+      </p><div class="itemizedlist"><ul type="disc"><li><p>
+            Functions can return string, integer, or real values and can
+            accept arguments of those same types.
+          </p></li><li><p>
+            You can define simple functions that operate on a single row
+            at a time, or aggregate functions that operate on groups of
+            rows.
+          </p></li><li><p>
+            Information is provided to functions that enables them to
+            check the number, types, and names of the arguments passed
+            to them.
+          </p></li><li><p>
+            You can tell MySQL to coerce arguments to a given type
+            before passing them to a function.
+          </p></li><li><p>
+            You can indicate that a function returns
+            <code class="literal">NULL</code> or that an error occurred.
+          </p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="create-function"></a>26.2.2. <code class="literal">CREATE FUNCTION</code> Syntax</h3></div></div></div><a class="indexterm" name="id4643217"></a><a class="indexterm" name="id4643226"></a><a class="indexterm" name="id4643238"></a><a class="indexterm" name="id4643251"></a><a class="indexterm" name="id4643260"></a><a class="indexterm" name="id4643269"></a><pre class="programlisting">CREATE [AGGREGATE] FUNCTION <em class="replaceable"><code>function_name</code></em> RETURNS {STRING|INTEGER|REAL|DECIMAL}
+    SONAME <em class="replaceable"><code>shared_library_name</code></em>
+</pre><p>
+        A user-defined function (UDF) is a way to extend MySQL with a
+        new function that works like a native (built-in) MySQL function
+        such as <a href="functions.html#function_abs"><code class="literal">ABS()</code></a> or
+        <a href="functions.html#function_concat"><code class="literal">CONCAT()</code></a>.
+      </p><p>
+        <em class="replaceable"><code>function_name</code></em> is the name that should
+        be used in SQL statements to invoke the function. The
+        <code class="literal">RETURNS</code> clause indicates the type of the
+        function's return value. As of MySQL 5.0.3,
+        <code class="literal">DECIMAL</code> is a legal value after
+        <code class="literal">RETURNS</code>, but currently
+        <code class="literal">DECIMAL</code> functions return string values and
+        should be written like <code class="literal">STRING</code> functions.
+      </p><p>
+        <em class="replaceable"><code>shared_library_name</code></em> is the basename
+        of the shared object file that contains the code that implements
+        the function. The file must be located in a directory that is
+        searched by your system's dynamic linker.
+      </p><p>
+        To create a function, you must have the
+        <code class="literal">INSERT</code> and privilege for the
+        <code class="literal">mysql</code> database. This is necessary because
+        <code class="literal">CREATE FUNCTION</code> adds a row to the
+        <code class="literal">mysql.func</code> system table that records the
+        function's name, type, and shared library name. If you do not
+        have this table, you should run the
+        <span><strong class="command">mysql_upgrade</strong></span> command to create it. See
+        <a href="programs.html#mysql-upgrade" title="4.4.9. mysql_upgrade — Check Tables for MySQL Upgrade">Section 4.4.9, “<span><strong class="command">mysql_upgrade</strong></span> — Check Tables for MySQL Upgrade”</a>.
+      </p><p>
+        An active function is one that has been loaded with
+        <code class="literal">CREATE FUNCTION</code> and not removed with
+        <code class="literal">DROP FUNCTION</code>. All active functions are
+        reloaded each time the server starts, unless you start
+        <span><strong class="command">mysqld</strong></span> with the
+        <code class="option">--skip-grant-tables</code> option. In this case, UDF
+        initialization is skipped and UDFs are unavailable.
+      </p><p>
+        For instructions on writing user-defined functions, see
+        <a href="extending-mysql.html#adding-udf" title="26.2.4. Adding a New User-Defined Function">Section 26.2.4, “Adding a New User-Defined Function”</a>. For the UDF mechanism to work,
+        functions must be written in C or C++ (or another language that
+        can use C calling conventions), your operating system must
+        support dynamic loading and you must have compiled
+        <span><strong class="command">mysqld</strong></span> dynamically (not statically).
+      </p><p>
+        An <code class="literal">AGGREGATE</code> function works exactly like a
+        native MySQL aggregate (summary) function such as
+        <code class="literal">SUM</code> or
+        <a href="functions.html#function_count"><code class="literal">COUNT()</code></a>. For
+        <code class="literal">AGGREGATE</code> to work, your
+        <code class="literal">mysql.func</code> table must contain a
+        <code class="literal">type</code> column. If your
+        <code class="literal">mysql.func</code> table does not have this column,
+        you should run the <span><strong class="command">mysql_upgrade</strong></span> program to
+        create it (see <a href="programs.html#mysql-upgrade" title="4.4.9. mysql_upgrade — Check Tables for MySQL Upgrade">Section 4.4.9, “<span><strong class="command">mysql_upgrade</strong></span> — Check Tables for MySQL Upgrade”</a>).
+      </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+          To upgrade the shared library associated with a UDF, issue a
+          <code class="literal">DROP FUNCTION</code> statement, upgrade the shared
+          library, and then issue a <code class="literal">CREATE FUNCTION</code>
+          statement. If you upgrade the shared library first and then
+          use <code class="literal">DROP FUNCTION</code>, the server may crash.
+        </p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="drop-function"></a>26.2.3. <code class="literal">DROP FUNCTION</code> Syntax</h3></div></div></div><a class="indexterm" name="id4643574"></a><a class="indexterm" name="id4643583"></a><a class="indexterm" name="id4643595"></a><a class="indexterm" name="id4643608"></a><a class="indexterm" name="id4643617"></a><a class="indexterm" name="id4643626"></a><pre class="programlisting">DROP FUNCTION <em class="replaceable"><code>function_name</code></em>
+</pre><p>
+        This statement drops the user-defined function (UDF) named
+        <em class="replaceable"><code>function_name</code></em>.
+      </p><p>
+        To drop a function, you must have the <code class="literal">DELETE</code>
+        privilege for the <code class="literal">mysql</code> database. This is
+        because <code class="literal">DROP FUNCTION</code> removes a row from the
+        <code class="literal">mysql.func</code> system table that records the
+        function's name, type, and shared library name.
+      </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+          To upgrade the shared library associated with a UDF, issue a
+          <code class="literal">DROP FUNCTION</code> statement, upgrade the shared
+          library, and then issue a <code class="literal">CREATE FUNCTION</code>
+          statement. If you upgrade the shared library first and then
+          use <code class="literal">DROP FUNCTION</code>, the server may crash.
+        </p></div><p>
+        <code class="literal">DROP FUNCTION</code> is also used to drop stored
+        functions (see <a href="stored-procedures.html#drop-procedure" title="18.2.3. DROP PROCEDURE and DROP FUNCTION
+        Syntax">Section 18.2.3, “<code class="literal">DROP PROCEDURE</code> and <code class="literal">DROP FUNCTION</code>
+        Syntax”</a>).
+      </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="adding-udf"></a>26.2.4. Adding a New User-Defined Function</h3></div></div></div><div class="toc"><dl><dt><span class="section"><a href="extending-mysql.html#udf-calling">26.2.4.1. UDF Calling Sequences for Simple Functions</a></span></dt><dt><span class="section"><a href="extending-mysql.html#udf-aggr-calling">26.2.4.2. UDF Calling Sequences for Aggregate Functions</a></span></dt><dt><span class="section"><a href="extending-mysql.html#udf-arguments">26.2.4.3. UDF Argument Processing</a></span></dt><dt><span class="section"><a href="extending-mysql.html#udf-return-values">26.2.4.4. UDF Return Values and Error Handling</a></span></dt><dt><span class="section"><a href="extending-mysql.html#udf-compiling">26.2.4.5. Compiling and Installing User-Defined Functions</a></span></dt><dt><span class="section"><a href="extending-mysql.html#udf-security">26.2.4.6. User-Defined Function Security Precautions</a></span></dt></dl></div><a class="indexterm" name="id4643763"></a><a class="indexterm" name="id4643776"></a><a class="indexterm" name="id4643788"></a><p>
+        For the UDF mechanism to work, functions must be written in C or
+        C++ (or another language that can use C calling conventions),
+        and your operating system must support dynamic loading. The
+        MySQL source distribution includes a file
+        <code class="filename">sql/udf_example.c</code> that defines 5 new
+        functions. Consult this file to see how UDF calling conventions
+        work. UDF-related symbols and data structures are defined in the
+        <code class="filename">include/mysql_com.h</code> header file. (You need
+        not include this header file directly because it is included by
+        <code class="filename">mysql.h</code>.)
+      </p><p>
+        A UDF contains code that becomes part of the running server, so
+        when you write a UDF, you are bound by any and all constraints
+        that otherwise apply to writing server code. For example, you
+        may have problems if you attempt to use functions from the
+        <code class="literal">libstdc++</code> library. Note that these
+        constraints may change in future versions of the server, so it
+        is possible that server upgrades will require revisions to UDFs
+        that were originally written for older servers. For information
+        about these constraints, see
+        <a href="installing.html#configure-options" title="2.4.15.2. Typical configure Options">Section 2.4.15.2, “Typical <span><strong class="command">configure</strong></span> Options”</a>, and
+        <a href="installing.html#compilation-problems" title="2.4.15.4. Dealing with Problems Compiling MySQL">Section 2.4.15.4, “Dealing with Problems Compiling MySQL”</a>.
+      </p><p>
+        To be able to use UDFs, you need to link
+        <span><strong class="command">mysqld</strong></span> dynamically. Don't configure MySQL
+        using <code class="option">--with-mysqld-ldflags=-all-static</code>. If you
+        want to use a UDF that needs to access symbols from
+        <span><strong class="command">mysqld</strong></span> (for example, the
+        <code class="literal">metaphone</code> function in
+        <code class="filename">sql/udf_example.c</code> that uses
+        <code class="literal">default_charset_info</code>), you must link the
+        program with <code class="option">-rdynamic</code> (see <code class="literal">man
+        dlopen</code>). If you plan to use UDFs, the rule of thumb is
+        to configure MySQL with
+        <code class="option">--with-mysqld-ldflags=-rdynamic</code> unless you have
+        a very good reason not to.
+      </p><p>
+        For each function that you want to use in SQL statements, you
+        should define corresponding C (or C++) functions. In the
+        following discussion, the name “<span class="quote">xxx</span>” is used for an
+        example function name. To distinguish between SQL and C/C++
+        usage, <code class="literal">XXX()</code> (uppercase) indicates an SQL
+        function call, and <code class="literal">xxx()</code> (lowercase)
+        indicates a C/C++ function call.
+      </p><p>
+        The C/C++ functions that you write to implement the interface
+        for <code class="literal">XXX()</code> are:
+      </p><div class="itemizedlist"><ul type="disc"><li><p>
+            <code class="literal">xxx()</code> (required)
+          </p><p>
+            The main function. This is where the function result is
+            computed. The correspondence between the SQL function data
+            type and the return type of your C/C++ function is shown
+            here:
+          </p><div class="informaltable"><table border="1"><colgroup><col><col></colgroup><tbody><tr><td><span class="bold"><strong>SQL Type</strong></span></td><td><span class="bold"><strong>C/C++ Type</strong></span></td></tr><tr><td><code class="literal">STRING</code></td><td><code class="literal">char *</code></td></tr><tr><td><code class="literal">INTEGER</code></td><td><code class="literal">long long</code></td></tr><tr><td><code class="literal">REAL</code></td><td><code class="literal">double</code></td></tr></tbody></table></div><p>
+            It is also possible to declare a <code class="literal">DECIMAL</code>
+            function, but currently the value is returned as a string,
+            so you should write the UDF as though it were a
+            <code class="literal">STRING</code> function. <code class="literal">ROW</code>
+            functions are not implemented.
+          </p></li><li><p>
+            <code class="literal">xxx_init()</code> (optional)
+          </p><p>
+            The initialization function for <code class="literal">xxx()</code>. It
+            can be used for the following purposes:
+          </p><div class="itemizedlist"><ul type="circle"><li><p>
+                To check the number of arguments to
+                <code class="literal">XXX()</code>.
+              </p></li><li><p>
+                To check that the arguments are of a required type or,
+                alternatively, to tell MySQL to coerce arguments to the
+                types you want when the main function is called.
+              </p></li><li><p>
+                To allocate any memory required by the main function.
+              </p></li><li><p>
+                To specify the maximum length of the result.
+              </p></li><li><p>
+                To specify (for <code class="literal">REAL</code> functions) the
+                maximum number of decimal places in the result.
+              </p></li><li><p>
+                To specify whether the result can be
+                <code class="literal">NULL</code>.
+              </p></li></ul></div></li><li><p>
+            <code class="literal">xxx_deinit()</code> (optional)
+          </p><p>
+            The deinitialization function for <code class="literal">xxx()</code>.
+            It should deallocate any memory allocated by the
+            initialization function.
+          </p></li></ul></div><p>
+        When an SQL statement invokes <code class="literal">XXX()</code>, MySQL
+        calls the initialization function <code class="literal">xxx_init()</code>
+        to let it perform any required setup, such as argument checking
+        or memory allocation. If <code class="literal">xxx_init()</code> returns
+        an error, MySQL aborts the SQL statement with an error message
+        and does not call the main or deinitialization functions.
+        Otherwise, MySQL calls the main function
+        <code class="literal">xxx()</code> once for each row. After all rows have
+        been processed, MySQL calls the deinitialization function
+        <code class="literal">xxx_deinit()</code> so that it can perform any
+        required cleanup.
+      </p><p>
+        For aggregate functions that work like
+        <a href="functions.html#function_sum"><code class="literal">SUM()</code></a>, you must also provide the
+        following functions:
+      </p><div class="itemizedlist"><ul type="disc"><li><p>
+            <code class="literal">xxx_clear()</code> (required in
+            5.0)
+          </p><p>
+            Reset the current aggregate value but do not insert the
+            argument as the initial aggregate value for a new group.
+          </p></li><li><p>
+            <code class="literal">xxx_add()</code> (required)
+          </p><p>
+            Add the argument to the current aggregate value.
+          </p></li></ul></div><p>
+        MySQL handles aggregate UDFs as follows:
+      </p><div class="orderedlist"><ol type="1"><li><p>
+            Call <code class="literal">xxx_init()</code> to let the aggregate
+            function allocate any memory it needs for storing results.
+          </p></li><li><p>
+            Sort the table according to the <code class="literal">GROUP BY</code>
+            expression.
+          </p></li><li><p>
+            Call <code class="literal">xxx_clear()</code> for the first row in
+            each new group.
+          </p></li><li><p>
+            Call <code class="literal">xxx_add()</code> for each new row that
+            belongs in the same group.
+          </p></li><li><p>
+            Call <code class="literal">xxx()</code> to get the result for the
+            aggregate when the group changes or after the last row has
+            been processed.
+          </p></li><li><p>
+            Repeat 3-5 until all rows has been processed
+          </p></li><li><p>
+            Call <code class="literal">xxx_deinit()</code> to let the UDF free any
+            memory it has allocated.
+          </p></li></ol></div><p>
+        All functions must be thread-safe. This includes not just the
+        main function, but the initialization and deinitialization
+        functions as well, and also the additional functions required by
+        aggregate functions. A consequence of this requirement is that
+        you are not allowed to allocate any global or static variables
+        that change! If you need memory, you should allocate it in
+        <code class="literal">xxx_init()</code> and free it in
+        <code class="literal">xxx_deinit()</code>.
+      </p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="udf-calling"></a>26.2.4.1. UDF Calling Sequences for Simple Functions</h4></div></div></div><a class="indexterm" name="id4644391"></a><p>
+          This section describes the different functions that you need
+          to define when you create a simple UDF.
+          <a href="extending-mysql.html#adding-udf" title="26.2.4. Adding a New User-Defined Function">Section 26.2.4, “Adding a New User-Defined Function”</a>, describes the order in which
+          MySQL calls these functions.
+        </p><p>
+          The main <code class="literal">xxx()</code> function should be declared
+          as shown in this section. Note that the return type and
+          parameters differ, depending on whether you declare the SQL
+          function <code class="literal">XXX()</code> to return
+          <code class="literal">STRING</code>, <code class="literal">INTEGER</code>, or
+          <code class="literal">REAL</code> in the <code class="literal">CREATE
+          FUNCTION</code> statement:
+        </p><p>
+          For <code class="literal">STRING</code> functions:
+        </p><pre class="programlisting">char *xxx(UDF_INIT *initid, UDF_ARGS *args,
+          char *result, unsigned long *length,
+          char *is_null, char *error);
+</pre><p>
+          For <code class="literal">INTEGER</code> functions:
+        </p><pre class="programlisting">long long xxx(UDF_INIT *initid, UDF_ARGS *args,
+              char *is_null, char *error);
+</pre><p>
+          For <code class="literal">REAL</code> functions:
+        </p><pre class="programlisting">double xxx(UDF_INIT *initid, UDF_ARGS *args,
+              char *is_null, char *error);
+</pre><p>
+          <code class="literal">DECIMAL</code> functions return string values and
+          should be declared the same way as <code class="literal">STRING</code>
+          functions. <code class="literal">ROW</code> functions are not
+          implemented.
+        </p><p>
+          The initialization and deinitialization functions are declared
+          like this:
+        </p><pre class="programlisting">my_bool xxx_init(UDF_INIT *initid, UDF_ARGS *args, char *message);
+
+void xxx_deinit(UDF_INIT *initid);
+</pre><p>
+          The <code class="literal">initid</code> parameter is passed to all three
+          functions. It points to a <code class="literal">UDF_INIT</code>
+          structure that is used to communicate information between
+          functions. The <code class="literal">UDF_INIT</code> structure members
+          follow. The initialization function should fill in any members
+          that it wishes to change. (To use the default for a member,
+          leave it unchanged.)
+        </p><div class="itemizedlist"><ul type="disc"><li><p>
+              <code class="literal">my_bool maybe_null</code>
+            </p><p>
+              <code class="literal">xxx_init()</code> should set
+              <code class="literal">maybe_null</code> to <code class="literal">1</code> if
+              <code class="literal">xxx()</code> can return
+              <code class="literal">NULL</code>. The default value is
+              <code class="literal">1</code> if any of the arguments are declared
+              <code class="literal">maybe_null</code>.
+            </p></li><li><p>
+              <code class="literal">unsigned int decimals</code>
+            </p><p>
+              The number of decimal digits to the right of the decimal
+              point. The default value is the maximum number of decimal
+              digits in the arguments passed to the main function. (For
+              example, if the function is passed
+              <code class="literal">1.34</code>, <code class="literal">1.345</code>, and
+              <code class="literal">1.3</code>, the default would be 3, because
+              <code class="literal">1.345</code> has 3 decimal digits.
+            </p></li><li><p>
+              <code class="literal">unsigned int max_length</code>
+            </p><p>
+              The maximum length of the result. The default
+              <code class="literal">max_length</code> value differs depending on
+              the result type of the function. For string functions, the
+              default is the length of the longest argument. For integer
+              functions, the default is 21 digits. For real functions,
+              the default is 13 plus the number of decimal digits
+              indicated by <code class="literal">initid-&gt;decimals</code>. (For
+              numeric functions, the length includes any sign or decimal
+              point characters.)
+            </p><p>
+              If you want to return a blob value, you can set
+              <code class="literal">max_length</code> to 65KB or 16MB. This memory
+              is not allocated, but the value is used to decide which
+              data type to use if there is a need to temporarily store
+              the data.
+            </p></li><li><p>
+              <code class="literal">char *ptr</code>
+            </p><p>
+              A pointer that the function can use for its own purposes.
+              For example, functions can use
+              <code class="literal">initid-&gt;ptr</code> to communicate allocated
+              memory among themselves. <code class="literal">xxx_init()</code>
+              should allocate the memory and assign it to this pointer:
+            </p><pre class="programlisting">initid-&gt;ptr = allocated_memory;
+</pre><p>
+              In <code class="literal">xxx()</code> and
+              <code class="literal">xxx_deinit()</code>, refer to
+              <code class="literal">initid-&gt;ptr</code> to use or deallocate the
+              memory.
+            </p></li><li><p>
+              <code class="literal">my_bool const_item</code>
+            </p><p>
+              <code class="literal">xxx_init()</code> should set
+              <code class="literal">const_item</code> to <code class="literal">1</code> if
+              <code class="literal">xxx()</code> always returns the same value and
+              to <code class="literal">0</code> otherwise.
+            </p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="udf-aggr-calling"></a>26.2.4.2. UDF Calling Sequences for Aggregate Functions</h4></div></div></div><a class="indexterm" name="id4644816"></a><p>
+          This section describes the different functions that you need
+          to define when you create an aggregate UDF.
+          <a href="extending-mysql.html#adding-udf" title="26.2.4. Adding a New User-Defined Function">Section 26.2.4, “Adding a New User-Defined Function”</a>, describes the order in which
+          MySQL calls these functions.
+        </p><div class="itemizedlist"><ul type="disc"><li><p>
+              <code class="literal">xxx_reset()</code>
+            </p><p>
+              This function is called when MySQL finds the first row in
+              a new group. It should reset any internal summary
+              variables and then use the given
+              <code class="literal">UDF_ARGS</code> argument as the first value in
+              your internal summary value for the group. Declare
+              <code class="literal">xxx_reset()</code> as follows:
+            </p><pre class="programlisting">char *xxx_reset(UDF_INIT *initid, UDF_ARGS *args,
+                char *is_null, char *error);
+</pre><p>
+              <code class="literal">xxx_reset()</code> is not needed or used in
+              MySQL 5.0, in which the UDF interface uses
+              <code class="literal">xxx_clear()</code> instead. However, you can
+              define both <code class="literal">xxx_reset()</code> and
+              <code class="literal">xxx_clear()</code> if you want to have your
+              UDF work with older versions of the server. (If you do
+              include both functions, the <code class="literal">xxx_reset()</code>
+              function in many cases can be implemented internally by
+              calling <code class="literal">xxx_clear()</code> to reset all
+              variables, and then calling <code class="literal">xxx_add()</code>
+              to add the <code class="literal">UDF_ARGS</code> argument as the
+              first value in the group.)
+            </p></li><li><p>
+              <code class="literal">xxx_clear()</code>
+            </p><p>
+              This function is called when MySQL needs to reset the
+              summary results. It is called at the beginning for each
+              new group but can also be called to reset the values for a
+              query where there were no matching rows. Declare
+              <code class="literal">xxx_clear()</code> as follows:
+            </p><pre class="programlisting">char *xxx_clear(UDF_INIT *initid, char *is_null, char *error);
+</pre><p>
+              <code class="literal">is_null</code> is set to point to
+              <code class="literal">CHAR(0)</code> before calling
+              <code class="literal">xxx_clear()</code>.
+            </p><p>
+              If something went wrong, you can store a value in the
+              variable to which the <code class="literal">error</code> argument
+              points. <code class="literal">error</code> points to a single-byte
+              variable, not to a string buffer.
+            </p><p>
+              <code class="literal">xxx_clear()</code> is required by MySQL
+              5.0.
+            </p></li><li><p>
+              <code class="literal">xxx_add()</code>
+            </p><p>
+              This function is called for all rows that belong to the
+              same group, except for the first row. You should use it to
+              add the value in the <code class="literal">UDF_ARGS</code> argument
+              to your internal summary variable.
+            </p><pre class="programlisting">char *xxx_add(UDF_INIT *initid, UDF_ARGS *args,
+              char *is_null, char *error);
+</pre></li></ul></div><p>
+          The <code class="literal">xxx()</code> function for an aggregate UDF
+          should be declared the same way as for a non-aggregate UDF.
+          See <a href="extending-mysql.html#udf-calling" title="26.2.4.1. UDF Calling Sequences for Simple Functions">Section 26.2.4.1, “UDF Calling Sequences for Simple Functions”</a>.
+        </p><p>
+          For an aggregate UDF, MySQL calls the <code class="literal">xxx()</code>
+          function after all rows in the group have been processed. You
+          should normally never access its <code class="literal">UDF_ARGS</code>
+          argument here but instead return a value based on your
+          internal summary variables.
+        </p><p>
+          Return value handling in <code class="literal">xxx()</code> should be
+          done the same way as for a non-aggregate UDF. See
+          <a href="extending-mysql.html#udf-return-values" title="26.2.4.4. UDF Return Values and Error Handling">Section 26.2.4.4, “UDF Return Values and Error Handling”</a>.
+        </p><p>
+          The <code class="literal">xxx_reset()</code> and
+          <code class="literal">xxx_add()</code> functions handle their
+          <code class="literal">UDF_ARGS</code> argument the same way as functions
+          for non-aggregate UDFs. See <a href="extending-mysql.html#udf-arguments" title="26.2.4.3. UDF Argument Processing">Section 26.2.4.3, “UDF Argument Processing”</a>.
+        </p><p>
+          The pointer arguments to <code class="literal">is_null</code> and
+          <code class="literal">error</code> are the same for all calls to
+          <code class="literal">xxx_reset()</code>,
+          <code class="literal">xxx_clear()</code>, <code class="literal">xxx_add()</code>
+          and <code class="literal">xxx()</code>. You can use this to remember
+          that you got an error or whether the <code class="literal">xxx()</code>
+          function should return <code class="literal">NULL</code>. You should not
+          store a string into <code class="literal">*error</code>!
+          <code class="literal">error</code> points to a single-byte variable, not
+          to a string buffer.
+        </p><p>
+          <code class="literal">*is_null</code> is reset for each group (before
+          calling <code class="literal">xxx_clear()</code>).
+          <code class="literal">*error</code> is never reset.
+        </p><p>
+          If <code class="literal">*is_null</code> or <code class="literal">*error</code>
+          are set when <code class="literal">xxx()</code> returns, MySQL returns
+          <code class="literal">NULL</code> as the result for the group function.
+        </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="udf-arguments"></a>26.2.4.3. UDF Argument Processing</h4></div></div></div><a class="indexterm" name="id4645238"></a><a class="indexterm" name="id4645247"></a><p>
+          The <code class="literal">args</code> parameter points to a
+          <code class="literal">UDF_ARGS</code> structure that has the members
+          listed here:
+        </p><div class="itemizedlist"><ul type="disc"><li><p>
+              <code class="literal">unsigned int arg_count</code>
+            </p><p>
+              The number of arguments. Check this value in the
+              initialization function if you require your function to be
+              called with a particular number of arguments. For example:
+            </p><pre class="programlisting">if (args-&gt;arg_count != 2)
+{
+    strcpy(message,"XXX() requires two arguments");
+    return 1;
+}
+</pre><p>
+              For other <code class="literal">UDF_ARGS</code> member values that
+              are arrays, array references are zero-based. That is,
+              refer to array members using index values from 0 to
+              <code class="literal">args-&gt;arg_count</code> – 1.
+            </p></li><li><p>
+              <code class="literal">enum Item_result *arg_type</code>
+            </p><p>
+              A pointer to an array containing the types for each
+              argument. The possible type values are
+              <code class="literal">STRING_RESULT</code>,
+              <code class="literal">INT_RESULT</code>,
+              <code class="literal">REAL_RESULT</code>, and
+              <code class="literal">DECIMAL_RESULT</code>.
+            </p><p>
+              To make sure that arguments are of a given type and return
+              an error if they are not, check the
+              <code class="literal">arg_type</code> array in the initialization
+              function. For example:
+            </p><pre class="programlisting">if (args-&gt;arg_type[0] != STRING_RESULT ||
+    args-&gt;arg_type[1] != INT_RESULT)
+{
+    strcpy(message,"XXX() requires a string and an integer");
+    return 1;
+}
+</pre><p>
+              Arguments of type <code class="literal">DECIMAL_RESULT</code> are
+              passed as strings, so you should handle them the same way
+              as <code class="literal">STRING_RESULT</code> values.
+            </p><p>
+              As an alternative to requiring your function's arguments
+              to be of particular types, you can use the initialization
+              function to set the <code class="literal">arg_type</code> elements
+              to the types you want. This causes MySQL to coerce
+              arguments to those types for each call to
+              <code class="literal">xxx()</code>. For example, to specify that the
+              first two arguments should be coerced to string and
+              integer, respectively, do this in
+              <code class="literal">xxx_init()</code>:
+            </p><pre class="programlisting">args-&gt;arg_type[0] = STRING_RESULT;
+args-&gt;arg_type[1] = INT_RESULT;
+</pre><p>
+              Exact-value decimal arguments such as
+              <code class="literal">1.3</code> or <code class="literal">DECIMAL</code>
+              column values are passed with a type of
+              <code class="literal">DECIMAL_RESULT</code>. However, the values are
+              passed as strings. If you want to receive a number, use
+              the initialization function to specify that the argument
+              should be coerced to a <code class="literal">REAL_RESULT</code>
+              value:
+            </p><pre class="programlisting">args-&gt;arg_type[2] = REAL_RESULT;
+</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+                Prior to MySQL 5.0.3, decimal arguments were passed as
+                <code class="literal">REAL_RESULT</code> values. If you upgrade to
+                a newer version and find that your UDF now receives
+                string values, use the initialization function to coerce
+                the arguments to numbers as just described.
+              </p></div></li><li><p>
+              <code class="literal">char **args</code>
+            </p><p>
+              <code class="literal">args-&gt;args</code> communicates information
+              to the initialization function about the general nature of
+              the arguments passed to your function. For a constant
+              argument <code class="literal">i</code>,
+              <code class="literal">args-&gt;args[i]</code> points to the argument
+              value. (See below for instructions on how to access the
+              value properly.) For a non-constant argument,
+              <code class="literal">args-&gt;args[i]</code> is
+              <code class="literal">0</code>. A constant argument is an expression
+              that uses only constants, such as <code class="literal">3</code> or
+              <code class="literal">4*7-2</code> or
+              <a href="functions.html#function_sin"><code class="literal">SIN(3.14)</code></a>. A non-constant
+              argument is an expression that refers to values that may
+              change from row to row, such as column names or functions
+              that are called with non-constant arguments.
+            </p><p>
+              For each invocation of the main function,
+              <code class="literal">args-&gt;args</code> contains the actual
+              arguments that are passed for the row currently being
+              processed.
+            </p><p>
+              If argument <code class="literal">i</code> represents
+              <code class="literal">NULL</code>,
+              <code class="literal">args-&gt;args[i]</code> is a null pointer (0).
+              If the argument is not <code class="literal">NULL</code>, functions
+              can refer to it as follows:
+            </p><div class="itemizedlist"><ul type="circle"><li><p>
+                  An argument of type <code class="literal">STRING_RESULT</code>
+                  is given as a string pointer plus a length, to allow
+                  handling of binary data or data of arbitrary length.
+                  The string contents are available as
+                  <code class="literal">args-&gt;args[i]</code> and the string
+                  length is <code class="literal">args-&gt;lengths[i]</code>. Do
+                  not assume that the string is null-terminated.
+                </p></li><li><p>
+                  For an argument of type <code class="literal">INT_RESULT</code>,
+                  you must cast <code class="literal">args-&gt;args[i]</code> to a
+                  <code class="literal">long long</code> value:
+                </p><pre class="programlisting">long long int_val;
+int_val = *((long long*) args-&gt;args[i]);
+</pre></li><li><p>
+                  For an argument of type
+                  <code class="literal">REAL_RESULT</code>, you must cast
+                  <code class="literal">args-&gt;args[i]</code> to a
+                  <code class="literal">double</code> value:
+                </p><pre class="programlisting">double    real_val;
+real_val = *((double*) args-&gt;args[i]);
+</pre></li><li><p>
+                  For an argument of type
+                  <code class="literal">DECIMAL_RESULT</code>, the value is passed
+                  as a string and should be handled like a
+                  <code class="literal">STRING_RESULT</code> value.
+                </p></li><li><p>
+                  <code class="literal">ROW_RESULT</code> arguments are not
+                  implemented.
+                </p></li></ul></div></li><li><p>
+              <code class="literal">unsigned long *lengths</code>
+            </p><p>
+              For the initialization function, the
+              <code class="literal">lengths</code> array indicates the maximum
+              string length for each argument. You should not change
+              these. For each invocation of the main function,
+              <code class="literal">lengths</code> contains the actual lengths of
+              any string arguments that are passed for the row currently
+              being processed. For arguments of types
+              <code class="literal">INT_RESULT</code> or
+              <code class="literal">REAL_RESULT</code>, <code class="literal">lengths</code>
+              still contains the maximum length of the argument (as for
+              the initialization function).
+            </p></li><li><p>
+              <code class="literal">char *maybe_null</code>
+            </p><p>
+              For the initialization function, the
+              <code class="literal">maybe_null</code> array indicates for each
+              argument whether the argument value might be null (0 if
+              no, 1 if yes).
+            </p></li><li><p>
+              <code class="literal">char **attributes</code>
+            </p><p>
+              <code class="literal">args-&gt;attributes</code> communicates
+              information information about the names of the UDF
+              arguments. For argument <code class="literal">i</code>, the
+              attribute name is available as a string in
+              <code class="literal">args-&gt;attributes[i]</code> and the
+              attribute length is
+              <code class="literal">args-&gt;attribute_lengths[i]</code>. Do not
+              assume that the string is null-terminated.
+            </p><p>
+              By default, the name of a UDF argument is the text of the
+              expression used to specify the argument. For UDFs, an
+              argument may also have an optional <code class="literal">[AS]
+              <em class="replaceable"><code>alias_name</code></em></code> clause, in
+              which case the argument name is
+              <em class="replaceable"><code>alias_name</code></em>. The
+              <code class="literal">attributes</code> value for each argument thus
+              depends on whether an alias was given.
+            </p><p>
+              Suppose that a UDF <code class="literal">my_udf()</code> is invoked
+              as follows:
+            </p><pre class="programlisting">SELECT my_udf(expr1, expr2 AS alias1, expr3 alias2);
+</pre><p>
+              In this case, the <code class="literal">attributes</code> and
+              <code class="literal">attribute_lengths</code> arrays will have
+              these values:
+            </p><pre class="programlisting">args-&gt;attributes[0] = "expr1"
+args-&gt;attribute_lengths[0] = 5
+
+args-&gt;attributes[1] = "alias1"
+args-&gt;attribute_lengths[1] = 6
+
+args-&gt;attributes[2] = "alias2"
+args-&gt;attribute_lengths[2] = 6
+</pre></li><li><p>
+              <code class="literal">unsigned long *attribute_lengths</code>
+            </p><p>
+              The <code class="literal">attribute_lengths</code> array indicates
+              the length of each argument name.
+            </p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="udf-return-values"></a>26.2.4.4. UDF Return Values and Error Handling</h4></div></div></div><a class="indexterm" name="id4645925"></a><a class="indexterm" name="id4645937"></a><a class="indexterm" name="id4645950"></a><a class="indexterm" name="id4645962"></a><p>
+          The initialization function should return <code class="literal">0</code>
+          if no error occurred and <code class="literal">1</code> otherwise. If an
+          error occurs, <code class="literal">xxx_init()</code> should store a
+          null-terminated error message in the
+          <code class="literal">message</code> parameter. The message is returned
+          to the client. The message buffer is
+          <code class="literal">MYSQL_ERRMSG_SIZE</code> characters long, but you
+          should try to keep the message to less than 80 characters so
+          that it fits the width of a standard terminal screen.
+        </p><p>
+          The return value of the main function <code class="literal">xxx()</code>
+          is the function value, for <code class="literal">long long</code> and
+          <code class="literal">double</code> functions. A string function should
+          return a pointer to the result and set
+          <code class="literal">*result</code> and <code class="literal">*length</code> to
+          the contents and length of the return value. For example:
+        </p><pre class="programlisting">memcpy(result, "result string", 13);
+*length = 13;
+</pre><p>
+          The <code class="literal">result</code> buffer that is passed to the
+          <code class="literal">xxx()</code> function is 255 bytes long. If your
+          result fits in this, you don't have to worry about memory
+          allocation for results.
+        </p><p>
+          If your string function needs to return a string longer than
+          255 bytes, you must allocate the space for it with
+          <code class="literal">malloc()</code> in your
+          <code class="literal">xxx_init()</code> function or your
+          <code class="literal">xxx()</code> function and free it in your
+          <code class="literal">xxx_deinit()</code> function. You can store the
+          allocated memory in the <code class="literal">ptr</code> slot in the
+          <code class="literal">UDF_INIT</code> structure for reuse by future
+          <code class="literal">xxx()</code> calls. See
+          <a href="extending-mysql.html#udf-calling" title="26.2.4.1. UDF Calling Sequences for Simple Functions">Section 26.2.4.1, “UDF Calling Sequences for Simple Functions”</a>.
+        </p><p>
+          To indicate a return value of <code class="literal">NULL</code> in the
+          main function, set <code class="literal">*is_null</code> to
+          <code class="literal">1</code>:
+        </p><pre class="programlisting">*is_null = 1;
+</pre><p>
+          To indicate an error return in the main function, set
+          <code class="literal">*error</code> to <code class="literal">1</code>:
+        </p><pre class="programlisting">*error = 1;
+</pre><p>
+          If <code class="literal">xxx()</code> sets <code class="literal">*error</code> to
+          <code class="literal">1</code> for any row, the function value is
+          <code class="literal">NULL</code> for the current row and for any
+          subsequent rows processed by the statement in which
+          <code class="literal">XXX()</code> was invoked.
+          (<code class="literal">xxx()</code> is not even called for subsequent
+          rows.)
+        </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="udf-compiling"></a>26.2.4.5. Compiling and Installing User-Defined Functions</h4></div></div></div><a class="indexterm" name="id4646219"></a><a class="indexterm" name="id4646232"></a><a class="indexterm" name="id4646244"></a><p>
+          Files implementing UDFs must be compiled and installed on the
+          host where the server runs. This process is described below
+          for the example UDF file
+          <code class="filename">sql/udf_example.c</code> that is included in the
+          MySQL source distribution.
+        </p><p>
+          The immediately following instructions are for Unix.
+          Instructions for Windows are given later in this section.
+        </p><p>
+          The <code class="filename">udf_example.c</code> file contains the
+          following functions:
+        </p><div class="itemizedlist"><ul type="disc"><li><p>
+              <code class="literal">metaphon()</code> returns a metaphon string of
+              the string argument. This is something like a soundex
+              string, but it's more tuned for English.
+            </p></li><li><p>
+              <code class="literal">myfunc_double()</code> returns the sum of the
+              ASCII values of the characters in its arguments, divided
+              by the sum of the length of its arguments.
+            </p></li><li><p>
+              <code class="literal">myfunc_int()</code> returns the sum of the
+              length of its arguments.
+            </p></li><li><p>
+              <code class="literal">sequence([const int])</code> returns a
+              sequence starting from the given number or 1 if no number
+              has been given.
+            </p></li><li><p>
+              <code class="literal">lookup()</code> returns the IP number for a
+              hostname.
+            </p></li><li><p>
+              <code class="literal">reverse_lookup()</code> returns the hostname
+              for an IP number. The function may be called either with a
+              single string argument of the form
+              <code class="literal">'xxx.xxx.xxx.xxx'</code> or with four numbers.
+            </p></li></ul></div><p>
+          A dynamically loadable file should be compiled as a sharable
+          object file, using a command something like this:
+        </p><pre class="programlisting">shell&gt; <strong class="userinput"><code>gcc -shared -o udf_example.so udf_example.c</code></strong>
+</pre><p>
+          If you are using <span><strong class="command">gcc</strong></span> with
+          <span><strong class="command">configure</strong></span> and <span><strong class="command">libtool</strong></span>
+          (which is how MySQL is configured), you should be able to
+          create <code class="filename">udf_example.so</code> with a simpler
+          command:
+        </p><pre class="programlisting">shell&gt; <strong class="userinput"><code>make udf_example.la</code></strong>
+</pre><p>
+          After you compile a shared object containing UDFs, you must
+          install it and tell MySQL about it. Compiling a shared object
+          from <code class="filename">udf_example.c</code> using
+          <span><strong class="command">gcc</strong></span> directly produces a file named
+          <code class="filename">udf_example.so</code>. Compiling the shared
+          object using <span><strong class="command">make</strong></span> produces a file named
+          something like <code class="filename">udf_example.so.0.0.0</code> in
+          the <code class="filename">.libs</code> directory (the exact name may
+          vary from platform to platform). Copy the shared object to
+          some directory such as <code class="filename">/usr/lib</code> that is
+          searched by your system's dynamic (runtime) linker, or add the
+          directory in which you placed the shared object to the linker
+          configuration file (for example,
+          <code class="filename">/etc/ld.so.conf</code>).
+        </p><p>
+          The dynamic linker name is system-specific (for example,
+          <span><strong class="command">ld-elf.so.1</strong></span> on FreeBSD,
+          <span><strong class="command">ld.so</strong></span> on Linux, or <span><strong class="command">dyld</strong></span>
+          on Mac OS X). Consult your system documentation for
+          information about the linker name and how to configure it.
+        </p><p>
+          On many systems, you can also set the
+          <code class="literal">LD_LIBRARY</code> or
+          <code class="literal">LD_LIBRARY_PATH</code> environment variable to
+          point at the directory where you have the files for your UDF.
+          The <code class="literal">dlopen</code> manual page tells you which
+          variable you should use on your system. You should set this in
+          <span><strong class="command">mysql.server</strong></span> or
+          <span><strong class="command">mysqld_safe</strong></span> startup scripts and restart
+          <span><strong class="command">mysqld</strong></span>.
+        </p><p>
+          On some systems, the <span><strong class="command">ldconfig</strong></span> program that
+          configures the dynamic linker does not recognize a shared
+          object unless its name begins with <code class="literal">lib</code>. In
+          this case you should rename a file such as
+          <code class="filename">udf_example.so</code> to
+          <code class="filename">libudf_example.so</code>.
+        </p><p>
+          On Windows, you can compile user-defined functions by using
+          the following procedure:
+        </p><div class="orderedlist"><ol type="1"><li><p>
+              You need to obtain the BitKeeper source repository for
+              MySQL 5.0. See
+              <a href="installing.html#installing-source-tree" title="2.4.15.3. Installing from the Development Source Tree">Section 2.4.15.3, “Installing from the Development Source Tree”</a>.
+            </p></li><li><p>
+              You must obtain the CMake build utility from
+              <a href="http://www.cmake.org" target="_top">http://www.cmake.org</a>. (Version 2.4.2 or
+              later is required).
+            </p></li><li><p>
+              In the source repository, look in the
+              <code class="filename">sql</code> directory. There are files named
+              <code class="filename">udf_example.def</code>
+              <code class="filename">udf_example.c</code> there. Copy both files
+              from this directory to your working directory.
+            </p></li><li><p>
+              Create a CMake <code class="filename">makefile</code> with these
+              contents:
+            </p><pre class="programlisting">PROJECT(udf_example)
+
+# Path for MySQL include directory
+INCLUDE_DIRECTORIES("c:/mysql/include")
+
+ADD_DEFINITIONS("-DHAVE_DLOPEN")
+ADD_LIBRARY(udf_example MODULE udf_example.c udf_example.def)
+TARGET_LINK_LIBRARIES(udf_example wsock32)
+</pre></li><li><p>
+              Create the VC project and solution files:
+            </p><pre class="programlisting">cmake -G "&lt;Generator&gt;"
+</pre><p>
+              Invoking <span><strong class="command">cmake --help</strong></span> shows you a list
+              of valid Generators.
+            </p></li><li><p>
+              Create <code class="filename">udf_example.dll</code>:
+            </p><pre class="programlisting">devenv udf_example.sln /build Release
+</pre></li></ol></div><p>
+          After the shared object file has been installed, notify
+          <span><strong class="command">mysqld</strong></span> about the new functions with these
+          statements:
+        </p><pre class="programlisting">mysql&gt; <strong class="userinput"><code>CREATE FUNCTION metaphon RETURNS STRING SONAME 'udf_example.so';</code></strong>
+mysql&gt; <strong class="userinput"><code>CREATE FUNCTION myfunc_double RETURNS REAL SONAME 'udf_example.so';</code></strong>
+mysql&gt; <strong class="userinput"><code>CREATE FUNCTION myfunc_int RETURNS INTEGER SONAME 'udf_example.so';</code></strong>
+mysql&gt; <strong class="userinput"><code>CREATE FUNCTION lookup RETURNS STRING SONAME 'udf_example.so';</code></strong>
+mysql&gt; <strong class="userinput"><code>CREATE FUNCTION reverse_lookup</code></strong>
+    -&gt;        <strong class="userinput"><code>RETURNS STRING SONAME 'udf_example.so';</code></strong>
+mysql&gt; <strong class="userinput"><code>CREATE AGGREGATE FUNCTION avgcost</code></strong>
+    -&gt;        <strong class="userinput"><code>RETURNS REAL SONAME 'udf_example.so';</code></strong>
+</pre><p>
+          Functions can be deleted using <code class="literal">DROP
+          FUNCTION</code>:
+        </p><pre class="programlisting">mysql&gt; <strong class="userinput"><code>DROP FUNCTION metaphon;</code></strong>
+mysql&gt; <strong class="userinput"><code>DROP FUNCTION myfunc_double;</code></strong>
+mysql&gt; <strong class="userinput"><code>DROP FUNCTION myfunc_int;</code></strong>
+mysql&gt; <strong class="userinput"><code>DROP FUNCTION lookup;</code></strong>
+mysql&gt; <strong class="userinput"><code>DROP FUNCTION reverse_lookup;</code></strong>
+mysql&gt; <strong class="userinput"><code>DROP FUNCTION avgcost;</code></strong>
+</pre><p>
+          The <code class="literal">CREATE FUNCTION</code> and <code class="literal">DROP
+          FUNCTION</code> statements update the
+          <code class="literal">func</code> system table in the
+          <code class="literal">mysql</code> database. The function's name, type
+          and shared library name are saved in the table. You must have
+          the <code class="literal">INSERT</code> and <code class="literal">DELETE</code>
+          privileges for the <code class="literal">mysql</code> database to create
+          and drop functions.
+        </p><p>
+          You should not use <code class="literal">CREATE FUNCTION</code> to add a
+          function that has previously been created. If you need to
+          reinstall a function, you should remove it with <code class="literal">DROP
+          FUNCTION</code> and then reinstall it with <code class="literal">CREATE
+          FUNCTION</code>. You would need to do this, for example, if
+          you recompile a new version of your function, so that
+          <span><strong class="command">mysqld</strong></span> gets the new version. Otherwise, the
+          server continues to use the old version.
+        </p><p>
+          An active function is one that has been loaded with
+          <code class="literal">CREATE FUNCTION</code> and not removed with
+          <code class="literal">DROP FUNCTION</code>. All active functions are
+          reloaded each time the server starts, unless you start
+          <span><strong class="command">mysqld</strong></span> with the
+          <code class="option">--skip-grant-tables</code> option. In this case, UDF
+          initialization is skipped and UDFs are unavailable.
+        </p><p>
+          If the new function will be referred to in statements that
+          will be replicated to slave servers, you must ensure that
+          every slave server also has the function available. Otherwise,
+          replication will fail on the slaves when they attempt to
+          invoke the function.
+        </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="udf-security"></a>26.2.4.6. User-Defined Function Security Precautions</h4></div></div></div><p>
+          MySQL takes the following measures to prevent misuse of
+          user-defined functions.
+        </p><p>
+          You must have the <code class="literal">INSERT</code> privilege to be
+          able to use <code class="literal">CREATE FUNCTION</code> and the
+          <code class="literal">DELETE</code> privilege to be able to use
+          <code class="literal">DROP FUNCTION</code>. This is necessary because
+          these statements add and delete rows from the
+          <code class="literal">mysql.func</code> table.
+        </p><p>
+          UDFs should have at least one symbol defined in addition to
+          the <code class="literal">xxx</code> symbol that corresponds to the main
+          <code class="literal">xxx()</code> function. These auxiliary symbols
+          correspond to the <code class="literal">xxx_init()</code>,
+          <code class="literal">xxx_deinit()</code>,
+          <code class="literal">xxx_reset()</code>,
+          <code class="literal">xxx_clear()</code>, and
+          <code class="literal">xxx_add()</code> functions. As of MySQL 5.0.3,
+          <span><strong class="command">mysqld</strong></span> supports an
+          <code class="option">--allow-suspicious-udfs</code> option that controls
+          whether UDFs that have only an <code class="literal">xxx</code> symbol
+          can be loaded. By default, the option is off, to prevent
+          attempts at loading functions from shared object files other
+          than those containing legitimate UDFs. If you have older UDFs
+          that contain only the <code class="literal">xxx</code> symbol and that
+          cannot be recompiled to include an auxiliary symbol, it may be
+          necessary to specify the
+          <code class="option">--allow-suspicious-udfs</code> option. Otherwise,
+          you should avoid enabling this capability.
+        </p><p>
+          UDF object files cannot be placed in arbitrary directories.
+          They must be located in some system directory that the dynamic
+          linker is configured to search. To enforce this restriction
+          and prevent attempts at specifying pathnames outside of
+          directories searched by the dynamic linker, MySQL checks the
+          shared object file name specified in <code class="literal">CREATE
+          FUNCTION</code> statements for pathname delimiter
+          characters. As of MySQL 5.0.3, MySQL also checks for pathname
+          delimiters in filenames stored in the
+          <code class="literal">mysql.func</code> table when it loads functions.
+          This prevents attempts at specifying illegitimate pathnames
+          through direct manipulation of the
+          <code class="literal">mysql.func</code> table. For information about
+          UDFs and the runtime linker, see
+          <a href="extending-mysql.html#udf-compiling" title="26.2.4.5. Compiling and Installing User-Defined Functions">Section 26.2.4.5, “Compiling and Installing User-Defined Functions”</a>.
+        </p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="adding-native-function"></a>26.2.5. Adding a New Native Function</h3></div></div></div><a class="indexterm" name="id4647095"></a><a class="indexterm" name="id4647107"></a><a class="indexterm" name="id4647120"></a><p>
+        To add a new native MySQL function, use the procedure described
+        here, which requires that you use a source distribution. You
+        cannot add native functions to a binary distribution because it
+        is necessary to modify MySQL source code and compile MySQL from
+        the modified source. If you migrate to another version of MySQL
+        (for example, when a new version is released), you must repeat
+        the procedure with the new version.
+      </p><p>
+        If the new native function will be referred to in statements
+        that will be replicated to slave servers, you must ensure that
+        every slave server also has the function available. Otherwise,
+        replication will fail on the slaves when they attempt to invoke
+        the function.
+      </p><p>
+        To add a new native function, follow these steps to modify
+        source files in the <code class="filename">sql</code> directory:
+      </p><div class="orderedlist"><ol type="1"><li><p>
+            Add one line to <code class="filename">lex.h</code> that defines the
+            function name in the <code class="literal">sql_functions[]</code>
+            array.
+          </p></li><li><p>
+            If the function prototype is simple (just takes zero, one,
+            two, or three arguments), add a line to the
+            <code class="literal">sql_functions[]</code> array in
+            <code class="filename">lex.h</code> that specifies
+            <code class="literal">SYM(FUNC_ARG<em class="replaceable"><code>N</code></em>)</code>
+            as the second argument (where <em class="replaceable"><code>N</code></em>
+            is the number of arguments the function takes). Also, add a
+            function in <code class="filename">item_create.cc</code> that creates
+            a function object. Look at <code class="literal">"ABS"</code> and
+            <code class="literal">create_funcs_abs()</code> for an example of
+            this.
+          </p><p>
+            If the function prototype is not simple (for example, if it
+            takes a variable number of arguments), you should make two
+            changes to <code class="filename">sql_yacc.yy</code>. One is a line
+            that indicates the preprocessor symbol that
+            <span><strong class="command">yacc</strong></span> should define; this should be added
+            at the beginning of the file. The other is an
+            “<span class="quote">item</span>” to be added to the
+            <code class="literal">simple_expr</code> parsing rule that defines the
+            function parameters. You will need an item for each syntax
+            with which the function can be called. For an example that
+            shows how this this is done, check all occurrences of
+            <code class="literal">ATAN</code> in <code class="filename">sql_yacc.yy</code>.
+          </p></li><li><p>
+            In <code class="filename">item_func.h</code>, declare a class
+            inheriting from <code class="literal">Item_num_func</code> or
+            <code class="literal">Item_str_func</code>, depending on whether your
+            function returns a number or a string.
+          </p></li><li><p>
+            In <code class="filename">item_func.cc</code>, add one of the
+            following declarations, depending on whether you are
+            defining a numeric or string function:
+          </p><pre class="programlisting">double   Item_func_newname::val()
+longlong Item_func_newname::val_int()
+String  *Item_func_newname::Str(String *str)
+</pre><p>
+            If you inherit your object from any of the standard items
+            (like <code class="literal">Item_num_func</code>), you probably only
+            have to define one of these functions and let the parent
+            object take care of the other functions. For example, the
+            <code class="literal">Item_str_func</code> class defines a
+            <code class="literal">val()</code> function that executes
+            <code class="literal">atof()</code> on the value returned by
+            <code class="literal">::str()</code>.
+          </p></li><li><p>
+            If the function is non-deterministic, include the following
+            statement in the item constructor to indicate that function
+            results should not be cached:
+          </p><pre class="programlisting">current_thd-&gt;lex-&gt;safe_to_cache_query=0;
+</pre><p>
+            A function is non-deterministic if, given fixed values for
+            its arguments, it can return different results for different
+            invocations.
+          </p></li><li><p>
+            You should probably also define the following object
+            function:
+          </p><pre class="programlisting">void Item_func_newname::fix_length_and_dec()
+</pre><p>
+            This function should at least calculate
+            <code class="literal">max_length</code> based on the given arguments.
+            <code class="literal">max_length</code> is the maximum number of
+            characters the function may return. This function should
+            also set <code class="literal">maybe_null = 0</code> if the main
+            function can't return a <code class="literal">NULL</code> value. The
+            function can check whether any of the function arguments can
+            return <code class="literal">NULL</code> by checking the arguments'
+            <code class="literal">maybe_null</code> variable. Look at
+            <code class="literal">Item_func_mod::fix_length_and_dec</code> for a
+            typical example of how to do this.
+          </p></li></ol></div><p>
+        All functions must be thread-safe. In other words, do not use
+        any global or static variables in the functions without
+        protecting them with mutexes.
+      </p><p>
+        If you want to return <code class="literal">NULL</code> from
+        <code class="literal">::val()</code>, <code class="literal">::val_int()</code>, or
+        <code class="literal">::str()</code>, you should set
+        <code class="literal">null_value</code> to 1 and return 0.
+      </p><p>
+        For <code class="literal">::str()</code> object functions, there are
+        additional considerations to be aware of:
+      </p><div class="itemizedlist"><ul type="disc"><li><p>
+            The <code class="literal">String *str</code> argument provides a
+            string buffer that may be used to hold the result. (For more
+            information about the <code class="literal">String</code> type, take a
+            look at the <code class="filename">sql_string.h</code> file.)
+          </p></li><li><p>
+            The <code class="literal">::str()</code> function should return the
+            string that holds the result, or <code class="literal">(char*)
+            0</code> if the result is <code class="literal">NULL</code>.
+          </p></li><li><p>
+            All current string functions try to avoid allocating any
+            memory unless absolutely necessary!
+          </p></li></ul></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="adding-procedures"></a>26.3. Adding New Procedures to MySQL</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="extending-mysql.html#procedure-analyse">26.3.1. <code class="literal">PROCEDURE ANALYSE</code></a></span></dt><dt><span class="section"><a href="extending-mysql.html#writing-a-procedure">26.3.2. Writing a Procedure</a></span></dt></dl></div><a class="indexterm" name="id4647563"></a><a class="indexterm" name="id4647575"></a><a class="indexterm" name="id4647588"></a><p>
+      In MySQL, you can define a procedure in C++ that can access and
+      modify the data in a query before it is sent to the client. The
+      modification can be done on a row-by-row or <code class="literal">GROUP
+      BY</code> level.
+    </p><p>
+      We have created an example procedure to show you what can be done.
+    </p><p>
+      Additionally, we recommend that you take a look at
+      <code class="literal">mylua</code>. With this you can use the LUA language
+      to load a procedure at runtime into <span><strong class="command">mysqld</strong></span>.
+    </p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="procedure-analyse"></a>26.3.1. <code class="literal">PROCEDURE ANALYSE</code></h3></div></div></div><p>
+        <code class="literal">analyse([<em class="replaceable"><code>max_elements</code></em>[,<em class="replaceable"><code>max_memory</code></em>]])</code>
+      </p><p>
+        This procedure is defined in the
+        <code class="filename">sql/sql_analyse.cc</code> file. It examines the
+        result from a query and returns an analysis of the results that
+        suggests optimal data types for each column. To obtain this
+        analysis, append <code class="literal">PROCEDURE ANALYSE</code> to the end
+        of a <code class="literal">SELECT</code> statement:
+      </p><pre class="programlisting">SELECT ... FROM ... WHERE ... PROCEDURE ANALYSE([<em class="replaceable"><code>max_elements</code></em>,[<em class="replaceable"><code>max_memory</code></em>]])
+</pre><p>
+        For example:
+      </p><pre class="programlisting">SELECT col1, col2 FROM table1 PROCEDURE ANALYSE(10, 2000);
+</pre><p>
+        The results show some statistics for the values returned by the
+        query, and propose an optimal data type for the columns. This
+        can be helpful for checking your existing tables, or after
+        importing new data. You may need to try different settings for
+        the arguments so that <code class="literal">PROCEDURE ANALYSE()</code>
+        does not suggest the <code class="literal">ENUM</code> data type when it
+        is not appropriate.
+      </p><p>
+        The arguments are optional and are used as follows:
+      </p><div class="itemizedlist"><ul type="disc"><li><p>
+            <em class="replaceable"><code>max_elements</code></em> (default 256) is the
+            maximum number of distinct values that
+            <code class="literal">analyse</code> notices per column. This is used
+            by <code class="literal">analyse</code> to check whether the optimal
+            data type should be of type <code class="literal">ENUM</code>.
+          </p></li><li><p>
+            <em class="replaceable"><code>max_memory</code></em> (default 8192) is the
+            maximum amount of memory that <code class="literal">analyse</code>
+            should allocate per column while trying to find all distinct
+            values.
+          </p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="writing-a-procedure"></a>26.3.2. Writing a Procedure</h3></div></div></div><p>
+        For the moment, the only documentation for this is the source.
+      </p><p>
+        You can find all information about procedures by examining the
+        following files:
+      </p><div class="itemizedlist"><ul type="disc"><li><p>
+            <code class="filename">sql/sql_analyse.cc</code>
+          </p></li><li><p>
+            <code class="filename">sql/procedure.h</code>
+          </p></li><li><p>
+            <code class="filename">sql/procedure.cc</code>
+          </p></li><li><p>
+            <code class="filename">sql/sql_select.cc</code>
+          </p></li></ul></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="porting"></a>26.4. Debugging and Porting MySQL</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="extending-mysql.html#debugging-server">26.4.1. Debugging a MySQL Server</a></span></dt><dt><span class="section"><a href="extending-mysql.html#debugging-client">26.4.2. Debugging a MySQL Client</a></span></dt><dt><span class="section"><a href="extending-mysql.html#the-dbug-package">26.4.3. The DBUG Package</a></span></dt><dt><span class="section"><a href="extending-mysql.html#rts-threads">26.4.4. Comments about RTS Threads</a></span></dt><dt><span class="section"><a href="extending-mysql.html#thread-packages">26.4.5. Differences Between Thread Packages</a></span></dt></dl></div><a class="indexterm" name="id4647886"></a><p>
+      This appendix helps you port MySQL to other operating systems. Do
+      check the list of currently supported operating systems first. See
+      <a href="installing.html#which-os" title="2.4.2. Operating Systems Supported by MySQL Community Server">Section 2.4.2, “Operating Systems Supported by MySQL Community Server”</a>. If you have created a new port of
+      MySQL, please let us know so that we can list it here and on our
+      Web site (<a href="http://www.mysql.com/" target="_top">http://www.mysql.com/</a>), recommending it
+      to other users.
+    </p><p>
+      Note: If you create a new port of MySQL, you are free to copy and
+      distribute it under the GPL license, but it does not make you a
+      copyright holder of MySQL.
+    </p><p>
+      A working POSIX thread library is needed for the server. On
+      Solaris 2.5 we use Sun PThreads (the native thread support in 2.4
+      and earlier versions is not good enough), on Linux we use
+      LinuxThreads by Xavier Leroy,
+      <code class="email">&lt;<a href="mailto:Xavier.Leroy@inria.fr">Xavier.Leroy@inria.fr</a>&gt;</code>.
+    </p><p>
+      The hard part of porting to a new Unix variant without good native
+      thread support is probably to port MIT-pthreads. See
+      <code class="filename">mit-pthreads/README</code> and Programming POSIX
+      Threads (<a href="http://www.humanfactor.com/pthreads/" target="_top">http://www.humanfactor.com/pthreads/</a>).
+    </p><p>
+      Up to MySQL 4.0.2, the MySQL distribution included a patched
+      version of Chris Provenzano's Pthreads from MIT (see the MIT
+      Pthreads Web page at
+      <a href="http://www.mit.edu/afs/sipb/project/pthreads/" target="_top">http://www.mit.edu/afs/sipb/project/pthreads/</a> and a
+      programming introduction at
+      <a href="http://www.mit.edu:8001/people/proven/IAP_2000/" target="_top">http://www.mit.edu:8001/people/proven/IAP_2000/</a>).
+      These can be used for some operating systems that do not have
+      POSIX threads. See <a href="installing.html#mit-pthreads" title="2.4.15.5. MIT-pthreads Notes">Section 2.4.15.5, “MIT-pthreads Notes”</a>.
+    </p><p>
+      It is also possible to use another user level thread package named
+      FSU Pthreads (see
+      <a href="http://moss.csc.ncsu.edu/~mueller/pthreads/" target="_top">http://moss.csc.ncsu.edu/~mueller/pthreads/</a>). This
+      implementation is being used for the SCO port.
+    </p><p>
+      See the <code class="filename">thr_lock.c</code> and
+      <code class="filename">thr_alarm.c</code> programs in the
+      <code class="filename">mysys</code> directory for some tests/examples of
+      these problems.
+    </p><p>
+      Both the server and the client need a working C++ compiler. We use
+      <span><strong class="command">gcc</strong></span> on many platforms. Other compilers that are
+      known to work are SPARCworks, Sun Forte, Irix
+      <span><strong class="command">cc</strong></span>, HP-UX <span><strong class="command">aCC</strong></span>, IBM AIX
+      <span><strong class="command">xlC_r</strong></span>), Intel <span><strong class="command">ecc/icc</strong></span> and
+      Compaq <span><strong class="command">cxx</strong></span>).
+    </p><a class="indexterm" name="id4648034"></a><a class="indexterm" name="id4648047"></a><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3><p>
+        If you are trying to build MySQL 5.1 with <span><strong class="command">icc</strong></span>
+        on the IA64 platform, and need support for MySQL Cluster, you
+        should first ensure that you are using <span><strong class="command">icc</strong></span>
+        version 9.1.043 or later. (For details, see <a href="http://bugs.mysql.com/21875" target="_top">Bug#21875</a>.)
+      </p></div><p>
+      To compile only the client use <span><strong class="command">./configure
+      --without-server</strong></span>.
+    </p><p>
+      There is currently no support for only compiling the server, nor
+      is it likely to be added unless someone has a good reason for it.
+    </p><p>
+      If you want/need to change any <code class="filename">Makefile</code> or
+      the configure script you also need GNU Automake and Autoconf. See
+      <a href="installing.html#installing-source-tree" title="2.4.15.3. Installing from the Development Source Tree">Section 2.4.15.3, “Installing from the Development Source Tree”</a>.
+    </p><p>
+      All steps needed to remake everything from the most basic files.
+    </p><pre class="programlisting">/bin/rm */.deps/*.P
+/bin/rm -f config.cache
+aclocal
+autoheader
+aclocal
+automake
+autoconf
+./configure --with-debug=full --prefix='your installation directory'
+
+# The makefiles generated above need GNU make 3.75 or newer.
+# (called gmake below)
+gmake clean all install init-db
+</pre><p>
+      If you run into problems with a new port, you may have to do some
+      debugging of MySQL! See <a href="extending-mysql.html#debugging-server" title="26.4.1. Debugging a MySQL Server">Section 26.4.1, “Debugging a MySQL Server”</a>.
+    </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+        Before you start debugging <span><strong class="command">mysqld</strong></span>, first get
+        the test programs <code class="literal">mysys/thr_alarm</code> and
+        <code class="literal">mysys/thr_lock</code> to work. This ensures that
+        your thread installation has even a remote chance to work!
+      </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="debugging-server"></a>26.4.1. Debugging a MySQL Server</h3></div></div></div><div class="toc"><dl><dt><span class="section"><a href="extending-mysql.html#compiling-for-debugging">26.4.1.1. Compiling MySQL for Debugging</a></span></dt><dt><span class="section"><a href="extending-mysql.html#making-trace-files">26.4.1.2. Creating Trace Files</a></span></dt><dt><span class="section"><a href="extending-mysql.html#making-windows-dumps">26.4.1.3. Using <code class="filename">pdb</code> to create a Windows crashdump</a></span></dt><dt><span class="section"><a href="extending-mysql.html#using-gdb-on-mysqld">26.4.1.4. Debugging <span><strong class="command">mysqld</strong></span> under <span><strong class="command">gdb</strong></span></a></span></dt><dt><span class="section"><a href="extending-mysql.html#using-stack-trace">26.4.1.5. Using a Stack Trace</a></span></dt><dt><span class="section"><a href="extending-mysql.html#using-log-files">26.4.1.6. Using Server Logs to Find Causes of Errors in <span><strong class="command">mysqld</strong></span></a></span></dt><dt><span class="section"><a href="extending-mysql.html#reproducible-test-case">26.4.1.7. Making a Test Case If You Experience Table Corruption</a></span></dt></dl></div><a class="indexterm" name="id4648168"></a><a class="indexterm" name="id4648180"></a><a class="indexterm" name="id4648193"></a><p>
+        If you are using some functionality that is very new in MySQL,
+        you can try to run <span><strong class="command">mysqld</strong></span> with the
+        <code class="option">--skip-new</code> (which disables all new, potentially
+        unsafe functionality) or with <code class="option">--safe-mode</code> which
+        disables a lot of optimization that may cause problems. See
+        <a href="error-handling.html#crashing" title="B.1.4.2. What to Do If MySQL Keeps Crashing">Section B.1.4.2, “What to Do If MySQL Keeps Crashing”</a>.
+      </p><p>
+        If <span><strong class="command">mysqld</strong></span> doesn't want to start, you should
+        verify that you don't have any <code class="filename">my.cnf</code> files
+        that interfere with your setup! You can check your
+        <code class="filename">my.cnf</code> arguments with <span><strong class="command">mysqld
+        --print-defaults</strong></span> and avoid using them by starting with
+        <span><strong class="command">mysqld --no-defaults ...</strong></span>.
+      </p><p>
+        If <span><strong class="command">mysqld</strong></span> starts to eat up CPU or memory or
+        if it “<span class="quote">hangs,</span>” you can use <span><strong class="command">mysqladmin
+        processlist status</strong></span> to find out if someone is executing
+        a query that takes a long time. It may be a good idea to run
+        <span><strong class="command">mysqladmin -i10 processlist status</strong></span> in some
+        window if you are experiencing performance problems or problems
+        when new clients can't connect.
+      </p><p>
+        The command <span><strong class="command">mysqladmin debug</strong></span> dumps some
+        information about locks in use, used memory and query usage to
+        the MySQL log file. This may help solve some problems. This
+        command also provides some useful information even if you
+        haven't compiled MySQL for debugging!
+      </p><p>
+        If the problem is that some tables are getting slower and slower
+        you should try to optimize the table with <code class="literal">OPTIMIZE
+        TABLE</code> or <span><strong class="command">myisamchk</strong></span>. See
+        <a href="server-administration.html" title="Chapter 5. MySQL Server Administration">Chapter 5, <i>MySQL Server Administration</i></a>. You should also check
+        the slow queries with <code class="literal">EXPLAIN</code>.
+      </p><p>
+        You should also read the OS-specific section in this manual for
+        problems that may be unique to your environment. See
+        <a href="installing.html#operating-system-specific-notes" title="2.4.19. Operating System-Specific Notes">Section 2.4.19, “Operating System-Specific Notes”</a>.
+      </p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="compiling-for-debugging"></a>26.4.1.1. Compiling MySQL for Debugging</h4></div></div></div><p>
+          If you have some very specific problem, you can always try to
+          debug MySQL. To do this you must configure MySQL with the
+          <code class="option">--with-debug</code> or the
+          <code class="option">--with-debug=full</code> option. You can check
+          whether MySQL was compiled with debugging by doing:
+          <span><strong class="command">mysqld --help</strong></span>. If the
+          <code class="option">--debug</code> flag is listed with the options then
+          you have debugging enabled. <span><strong class="command">mysqladmin ver</strong></span>
+          also lists the <span><strong class="command">mysqld</strong></span> version as
+          <span><strong class="command">mysql ... --debug</strong></span> in this case.
+        </p><p>
+          If you are using <span><strong class="command">gcc</strong></span>, the recommended
+          <span><strong class="command">configure</strong></span> line is:
+        </p><pre class="programlisting">CC=gcc CFLAGS="-O2" CXX=gcc CXXFLAGS="-O2 -felide-constructors \
+   -fno-exceptions -fno-rtti" ./configure --prefix=/usr/local/mysql \
+   --with-debug --with-extra-charsets=complex
+</pre><p>
+          This avoids problems with the <code class="literal">libstdc++</code>
+          library and with C++ exceptions (many compilers have problems
+          with C++ exceptions in threaded code) and compile a MySQL
+          version with support for all character sets.
+        </p><p>
+          If you suspect a memory overrun error, you can configure MySQL
+          with <code class="option">--with-debug=full</code>, which installs a
+          memory allocation (<code class="literal">SAFEMALLOC</code>) checker.
+          However, running with <code class="literal">SAFEMALLOC</code> is quite
+          slow, so if you get performance problems you should start
+          <span><strong class="command">mysqld</strong></span> with the
+          <code class="option">--skip-safemalloc</code> option. This disables the
+          memory overrun checks for each call to
+          <code class="literal">malloc()</code> and <code class="literal">free()</code>.
+        </p><p>
+          If <span><strong class="command">mysqld</strong></span> stops crashing when you compile
+          it with <code class="option">--with-debug</code>, you probably have found
+          a compiler bug or a timing bug within MySQL. In this case, you
+          can try to add <code class="option">-g</code> to the
+          <code class="literal">CFLAGS</code> and <code class="literal">CXXFLAGS</code>
+          variables above and not use <code class="option">--with-debug</code>. If
+          <span><strong class="command">mysqld</strong></span> dies, you can at least attach to it
+          with <span><strong class="command">gdb</strong></span> or use <span><strong class="command">gdb</strong></span> on
+          the core file to find out what happened.
+        </p><p>
+          When you configure MySQL for debugging you automatically
+          enable a lot of extra safety check functions that monitor the
+          health of <span><strong class="command">mysqld</strong></span>. If they find something
+          “<span class="quote">unexpected,</span>” an entry is written to
+          <code class="literal">stderr</code>, which
+          <span><strong class="command">mysqld_safe</strong></span> directs to the error log! This
+          also means that if you are having some unexpected problems
+          with MySQL and are using a source distribution, the first
+          thing you should do is to configure MySQL for debugging! (The
+          second thing is to send mail to a MySQL mailing list and ask
+          for help. See <a href="introduction.html#mailing-lists" title="1.6.1. MySQL Mailing Lists">Section 1.6.1, “MySQL Mailing Lists”</a>. If you believe
+          that you have found a bug, please use the instructions at
+          <a href="introduction.html#bug-reports" title="1.7. How to Report Bugs or Problems">Section 1.7, “How to Report Bugs or Problems”</a>.
+        </p><p>
+          In the Windows MySQL distribution,
+          <code class="literal">mysqld.exe</code> is by default compiled with
+          support for trace files. See also
+          <a href="extending-mysql.html#making-trace-files" title="26.4.1.2. Creating Trace Files">Section 26.4.1.2, “Creating Trace Files”</a>.
+        </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="making-trace-files"></a>26.4.1.2. Creating Trace Files</h4></div></div></div><p>
+          If the <span><strong class="command">mysqld</strong></span> server doesn't start or if
+          you can cause it to crash quickly, you can try to create a
+          trace file to find the problem.
+        </p><p>
+          To do this, you must have a <span><strong class="command">mysqld</strong></span> that has
+          been compiled with debugging support. You can check this by
+          executing <code class="literal">mysqld -V</code>. If the version number
+          ends with <code class="option">-debug</code>, it's compiled with support
+          for trace files. (On Windows, the debugging server is named
+          <span><strong class="command">mysqld-debug</strong></span> rather than
+          <span><strong class="command">mysqld</strong></span> as of MySQL 4.1.)
+        </p><p>
+          Start the <span><strong class="command">mysqld</strong></span> server with a trace log in
+          <code class="filename">/tmp/mysqld.trace</code> on Unix or
+          <code class="filename">C:\mysqld.trace</code> on Windows:
+        </p><pre class="programlisting">shell&gt; <strong class="userinput"><code>mysqld --debug</code></strong>
+</pre><p>
+          On Windows, you should also use the
+          <code class="option">--standalone</code> flag to not start
+          <span><strong class="command">mysqld</strong></span> as a service. In a console window,
+          use this command:
+        </p><pre class="programlisting">C:\&gt; <strong class="userinput"><code>mysqld-debug --debug --standalone</code></strong>
+</pre><p>
+          After this, you can use the <code class="literal">mysql.exe</code>
+          command-line tool in a second console window to reproduce the
+          problem. You can stop the <span><strong class="command">mysqld</strong></span> server
+          with <span><strong class="command">mysqladmin shutdown</strong></span>.
+        </p><p>
+          Note that the trace file become <span class="bold"><strong>very
+          big</strong></span>! If you want to generate a smaller trace file,
+          you can use debugging options something like this:
+        </p><p>
+          <span><strong class="command">mysqld
+          --debug=d,info,error,query,general,where:O,/tmp/mysqld.trace</strong></span>
+        </p><p>
+          This only prints information with the most interesting tags to
+          the trace file.
+        </p><p>
+          If you make a bug report about this, please only send the
+          lines from the trace file to the appropriate mailing list
+          where something seems to go wrong! If you can't locate the
+          wrong place, you can ftp the trace file, together with a full
+          bug report, to <a href="ftp://ftp.mysql.com/pub/mysql/upload/" target="_top">ftp://ftp.mysql.com/pub/mysql/upload/</a> so that a
+          MySQL developer can take a look at it.
+        </p><p>
+          The trace file is made with the
+          <span class="bold"><strong>DBUG</strong></span> package by Fred Fish.
+          See <a href="extending-mysql.html#the-dbug-package" title="26.4.3. The DBUG Package">Section 26.4.3, “The DBUG Package”</a>.
+        </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="making-windows-dumps"></a>26.4.1.3. Using <code class="filename">pdb</code> to create a Windows crashdump</h4></div></div></div><p>
+          Starting with MySQL 5.0.24 the Program Database files
+          (extension <code class="filename">pdb</code>) are included in the
+          Noinstall distribution of MySQL. These files provide
+          information for debugging your MySQL installation in the event
+          of a problem.
+        </p><p>
+          The PDB file contains more detailed information about
+          <code class="literal">mysqld</code> and other tools that enables more
+          detailed trace and dump files to be created. You can use these
+          with Dr Watson, <span><strong class="command">WinDbg</strong></span> and Visual Studio to
+          debug <span><strong class="command">mysqld</strong></span>.
+        </p><p>
+          For more information on PDB files, see
+          <a href="http://support.microsoft.com/kb/121366/" target="_top">Microsoft
+          Knowledge Base Article 121366</a>. For more information on
+          the debugging options available, see
+          <a href="http://www.microsoft.com/whdc/devtools/debugging/default.mspx" target="_top">Debugging
+          Tools for Windows</a>.
+        </p><p>
+          Dr Watson is installed with all Windows distributions, but if
+          you have installed Windows development tools, Dr Watson may
+          have been replaced with WinDbg, the debugger included with
+          Visual Studio, or the debugging tools provided with Borland or
+          Delphi.
+        </p><p>
+          To generate a crash file using Dr Watson, follow these steps:
+        </p><div class="orderedlist"><ol type="1"><li><p>
+              Start Dr Watson by running <span><strong class="command">drwtsn32.exe</strong></span>
+              interactively using the <code class="option">-i</code> option:
+            </p><pre class="programlisting">C:\&gt; drwtsn32 -i</pre></li><li><p>
+              Set the <span class="guilabel">Log File Path</span> to the
+              directory where you want to store trace files.
+            </p></li><li><p>
+              Make sure <span class="guilabel">Dump All Thread Contexts</span>
+              and <span class="guilabel">Append To Existing Log File</span>.
+            </p></li><li><p>
+              Uncheck <span class="guilabel">Dump Sumbol Table</span>,
+              <span class="guilabel">Visual Notification</span>, <span class="guilabel">Sound
+              Notification</span> and <span class="guilabel">Create Crash Dump
+              File</span>.
+            </p></li><li><p>
+              Set the <span class="guilabel">Number of Instructions</span> to a
+              suitable value to capture enough calls in the stacktrace.
+              A value of at 25 should be enough.
+            </p></li></ol></div><p>
+          Note that the file generated can be very large.
+        </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="using-gdb-on-mysqld"></a>26.4.1.4. Debugging <span><strong class="command">mysqld</strong></span> under <span><strong class="command">gdb</strong></span></h4></div></div></div><a class="indexterm" name="id4648959"></a><p>
+          On most systems you can also start <span><strong class="command">mysqld</strong></span>
+          from <span><strong class="command">gdb</strong></span> to get more information if
+          <span><strong class="command">mysqld</strong></span> crashes.
+        </p><p>
+          With some older <span><strong class="command">gdb</strong></span> versions on Linux you
+          must use <code class="literal">run --one-thread</code> if you want to be
+          able to debug <span><strong class="command">mysqld</strong></span> threads. In this case,
+          you can only have one thread active at a time. We recommend
+          you to upgrade to gdb 5.1 ASAP as thread debugging works much
+          better with this version!
+        </p><p>
+          NPTL threads (the new thread library on Linux) may cause
+          problems while running <span><strong class="command">mysqld</strong></span> under
+          <span><strong class="command">gdb</strong></span>. Some symptoms are:
+        </p><div class="itemizedlist"><ul type="disc"><li><p>
+              <span><strong class="command">mysqld</strong></span> hangs during startup (before it
+              writes <code class="literal">ready for connections</code>).
+            </p></li><li><p>
+              <span><strong class="command">mysqld</strong></span> crashes during a
+              <code class="literal">pthread_mutex_lock()</code> or
+              <code class="literal">pthread_mutex_unlock()</code> call.
+            </p></li></ul></div><p>
+          In this case, you should set the following environment
+          variable in the shell before starting <span><strong class="command">gdb</strong></span>:
+        </p><pre class="programlisting">LD_ASSUME_KERNEL=2.4.1
+export LD_ASSUME_KERNEL
+</pre><p>
+          When running <span><strong class="command">mysqld</strong></span> under
+          <span><strong class="command">gdb</strong></span>, you should disable the stack trace
+          with <code class="option">--skip-stack-trace</code> to be able to catch
+          segfaults within <span><strong class="command">gdb</strong></span>.
+        </p><p>
+          In MySQL 4.0.14 and above you should use the
+          <code class="option">--gdb</code> option to <span><strong class="command">mysqld</strong></span>.
+          This installs an interrupt handler for
+          <code class="literal">SIGINT</code> (needed to stop
+          <span><strong class="command">mysqld</strong></span> with <code class="literal">^C</code> to set
+          breakpoints) and disable stack tracing and core file handling.
+        </p><p>
+          It's very hard to debug MySQL under <span><strong class="command">gdb</strong></span> if
+          you do a lot of new connections the whole time as
+          <span><strong class="command">gdb</strong></span> doesn't free the memory for old
+          threads. You can avoid this problem by starting
+          <span><strong class="command">mysqld</strong></span> with
+          <code class="literal">thread_cache_size</code> set to a value equal to
+          <code class="literal">max_connections</code> + 1. In most cases just
+          using <code class="option">--thread_cache_size=5'</code> helps a lot!
+        </p><p>
+          If you want to get a core dump on Linux if
+          <span><strong class="command">mysqld</strong></span> dies with a SIGSEGV signal, you can
+          start <span><strong class="command">mysqld</strong></span> with the
+          <code class="option">--core-file</code> option. This core file can be
+          used to make a backtrace that may help you find out why
+          <span><strong class="command">mysqld</strong></span> died:
+        </p><pre class="programlisting">shell&gt; <strong class="userinput"><code>gdb mysqld core</code></strong>
+gdb&gt;   backtrace full
+gdb&gt;   quit
+</pre><p>
+          See <a href="error-handling.html#crashing" title="B.1.4.2. What to Do If MySQL Keeps Crashing">Section B.1.4.2, “What to Do If MySQL Keeps Crashing”</a>.
+        </p><p>
+          If you are using <span><strong class="command">gdb</strong></span> 4.17.x or above on
+          Linux, you should install a <code class="filename">.gdb</code> file,
+          with the following information, in your current directory:
+        </p><pre class="programlisting">set print sevenbit off
+handle SIGUSR1 nostop noprint
+handle SIGUSR2 nostop noprint
+handle SIGWAITING nostop noprint
+handle SIGLWP nostop noprint
+handle SIGPIPE nostop
+handle SIGALRM nostop
+handle SIGHUP nostop
+handle SIGTERM nostop noprint
+</pre><p>
+          If you have problems debugging threads with
+          <span><strong class="command">gdb</strong></span>, you should download gdb 5.x and try
+          this instead. The new <span><strong class="command">gdb</strong></span> version has very
+          improved thread handling!
+        </p><p>
+          Here is an example how to debug mysqld:
+        </p><pre class="programlisting">shell&gt; <strong class="userinput"><code>gdb /usr/local/libexec/mysqld</code></strong>
+gdb&gt; run
+...
+backtrace full # Do this when mysqld crashes
+</pre><p>
+          Include the above output in a bug report, which you can file
+          using the instructions in <a href="introduction.html#bug-reports" title="1.7. How to Report Bugs or Problems">Section 1.7, “How to Report Bugs or Problems”</a>.
+        </p><p>
+          If <span><strong class="command">mysqld</strong></span> hangs you can try to use some
+          system tools like <code class="literal">strace</code> or
+          <code class="literal">/usr/proc/bin/pstack</code> to examine where
+          <span><strong class="command">mysqld</strong></span> has hung.
+        </p><pre class="programlisting">strace /tmp/log libexec/mysqld
+</pre><a class="indexterm" name="id4649337"></a><a class="indexterm" name="id4649346"></a><a class="indexterm" name="id4649355"></a><a class="indexterm" name="id4649364"></a><p>
+          If you are using the Perl <code class="literal">DBI</code> interface,
+          you can turn on debugging information by using the
+          <code class="literal">trace</code> method or by setting the
+          <code class="literal">DBI_TRACE</code> environment variable.
+        </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="using-stack-trace"></a>26.4.1.5. Using a Stack Trace</h4></div></div></div><p>
+          On some operating systems, the error log contains a stack
+          trace if <span><strong class="command">mysqld</strong></span> dies unexpectedly. You can
+          use this to find out where (and maybe why)
+          <span><strong class="command">mysqld</strong></span> died. See
+          <a href="server-administration.html#error-log" title="5.2.1. The Error Log">Section 5.2.1, “The Error Log”</a>. To get a stack trace, you must
+          not compile <span><strong class="command">mysqld</strong></span> with the
+          <code class="option">-fomit-frame-pointer</code> option to gcc. See
+          <a href="extending-mysql.html#compiling-for-debugging" title="26.4.1.1. Compiling MySQL for Debugging">Section 26.4.1.1, “Compiling MySQL for Debugging”</a>.
+        </p><p>
+          If the error file contains something like the following:
+        </p><pre class="programlisting">mysqld got signal 11;
+The manual section 'Debugging a MySQL server' tells you how to
+use a stack trace and/or the core file to produce a readable 
+backtrace that may help in finding out why mysqld died
+Attempting backtrace. You can use the following information 
+to find out where mysqld died.  If you see no messages after 
+this, something went terribly wrong...
+stack range sanity check, ok, backtrace follows
+0x40077552
+0x81281a0
+0x8128f47
+0x8127be0
+0x8127995
+0x8104947
+0x80ff28f
+0x810131b
+0x80ee4bc
+0x80c3c91
+0x80c6b43
+0x80c1fd9
+0x80c1686
+</pre><p>
+          you can find where <span><strong class="command">mysqld</strong></span> died by doing the
+          following:
+        </p><div class="orderedlist"><ol type="1"><li><p>
+              Copy the preceding numbers to a file, for example
+              <code class="filename">mysqld.stack</code>.
+            </p></li><li><p>
+              Make a symbol file for the <span><strong class="command">mysqld</strong></span>
+              server:
+            </p><pre class="programlisting">nm -n libexec/mysqld &gt; /tmp/mysqld.sym
+</pre><p>
+              If you have not linked <span><strong class="command">mysqld</strong></span>
+              statically, use the following command:
+            </p><pre class="programlisting">nm -D -n libexec/mysqld &gt; /tmp/mysqld.sym
+</pre><p>
+              If you want to decode C++ symbols, use the
+              <code class="option">--demangle</code>, if available, to
+              <span><strong class="command">nm</strong></span>. If your version of
+              <span><strong class="command">nm</strong></span> does not have this option, you will
+              need to use the <span><strong class="command">c++filt</strong></span> command after
+              the stack dump has been produced to demangle the C++
+              names.
+            </p><p>
+              Note that most MySQL binary distributions (except for the
+              "debug" packages, where this information is included
+              inside of the binaries themselves) ship with the above
+              file, named <code class="literal">mysqld.sym.gz</code>. In this
+              case, you can simply unpack it by doing:
+            </p><pre class="programlisting">gunzip &lt; bin/mysqld.sym.gz &gt; /tmp/mysqld.sym
+</pre></li><li><p>
+              Execute the following line:
+            </p><pre class="programlisting">resolve_stack_dump -s /tmp/mysqld.sym -n mysqld.stack
+</pre><p>
+              If you were not able to include demangled C++ names in
+              your symbol file, use <span><strong class="command">c++filt</strong></span> on the
+              output:
+            </p><pre class="programlisting">resolve_stack_dump -s /tmp/mysqld.sym -n mysqld.stack|c++filt
+</pre><p>
+              This prints out where <span><strong class="command">mysqld</strong></span> died. If
+              this doesn't help you find out why
+              <span><strong class="command">mysqld</strong></span> died, you should make a bug
+              report and include the output from the above command with
+              the bug report.
+            </p><p>
+              Note however that in most cases it does not help us to
+              just have a stack trace to find the reason for the
+              problem. To be able to locate the bug or provide a
+              workaround, we would in most cases need to know the query
+              that killed <span><strong class="command">mysqld</strong></span> and preferable a
+              test case so that we can repeat the problem! See
+              <a href="introduction.html#bug-reports" title="1.7. How to Report Bugs or Problems">Section 1.7, “How to Report Bugs or Problems”</a>.
+            </p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="using-log-files"></a>26.4.1.6. Using Server Logs to Find Causes of Errors in <span><strong class="command">mysqld</strong></span></h4></div></div></div><p>
+          Note that before starting <span><strong class="command">mysqld</strong></span> with
+          <code class="option">--log</code> you should check all your tables with
+          <span><strong class="command">myisamchk</strong></span>. See
+          <a href="server-administration.html" title="Chapter 5. MySQL Server Administration">Chapter 5, <i>MySQL Server Administration</i></a>.
+        </p><p>
+          If <span><strong class="command">mysqld</strong></span> dies or hangs, you should start
+          <span><strong class="command">mysqld</strong></span> with <code class="option">--log</code>. When
+          <span><strong class="command">mysqld</strong></span> dies again, you can examine the end
+          of the log file for the query that killed
+          <span><strong class="command">mysqld</strong></span>.
+        </p><p>
+          If you are using <code class="option">--log</code> without a file name,
+          the log is stored in the database directory as
+          <code class="filename"><em class="replaceable"><code>host_name</code></em>.log</code>
+          In most cases it is the last query in the log file that killed
+          <span><strong class="command">mysqld</strong></span>, but if possible you should verify
+          this by restarting <span><strong class="command">mysqld</strong></span> and executing the
+          found query from the <span><strong class="command">mysql</strong></span> command-line
+          tools. If this works, you should also test all complicated
+          queries that didn't complete.
+        </p><p>
+          You can also try the command <code class="literal">EXPLAIN</code> on all
+          <code class="literal">SELECT</code> statements that takes a long time to
+          ensure that <span><strong class="command">mysqld</strong></span> is using indexes
+          properly. See <a href="sql-syntax.html#explain" title="12.3.2. EXPLAIN Syntax">Section 12.3.2, “<code class="literal">EXPLAIN</code> Syntax”</a>.
+        </p><p>
+          You can find the queries that take a long time to execute by
+          starting <span><strong class="command">mysqld</strong></span> with
+          <code class="option">--log-slow-queries</code>. See
+          <a href="server-administration.html#slow-query-log" title="5.2.4. The Slow Query Log">Section 5.2.4, “The Slow Query Log”</a>.
+        </p><p>
+          If you find the text <code class="literal">mysqld restarted</code> in
+          the error log file (normally named
+          <code class="filename">hostname.err</code>) you probably have found a
+          query that causes <span><strong class="command">mysqld</strong></span> to fail. If this
+          happens, you should check all your tables with
+          <span><strong class="command">myisamchk</strong></span> (see
+          <a href="server-administration.html" title="Chapter 5. MySQL Server Administration">Chapter 5, <i>MySQL Server Administration</i></a>), and test the queries
+          in the MySQL log files to see whether one fails. If you find
+          such a query, try first upgrading to the newest MySQL version.
+          If this doesn't help and you can't find anything in the
+          <code class="literal">mysql</code> mail archive, you should report the
+          bug to a MySQL mailing list. The mailing lists are described
+          at <a href="http://lists.mysql.com/" target="_top">http://lists.mysql.com/</a>, which also has
+          links to online list archives.
+        </p><p>
+          If you have started <span><strong class="command">mysqld</strong></span> with
+          <code class="option">--myisam-recover</code>, MySQL automatically checks
+          and tries to repair <code class="literal">MyISAM</code> tables if they
+          are marked as 'not closed properly' or 'crashed'. If this
+          happens, MySQL writes an entry in the
+          <code class="literal">hostname.err</code> file <code class="literal">'Warning:
+          Checking table ...'</code> which is followed by
+          <code class="literal">Warning: Repairing table</code> if the table needs
+          to be repaired. If you get a lot of these errors, without
+          <span><strong class="command">mysqld</strong></span> having died unexpectedly just
+          before, then something is wrong and needs to be investigated
+          further. See <a href="server-administration.html#server-options" title="5.1.2. Command Options">Section 5.1.2, “Command Options”</a>.
+        </p><p>
+          It is not a good sign if <span><strong class="command">mysqld</strong></span> did die
+          unexpectedly, but in this case, you should not investigate the
+          <code class="literal">Checking table...</code> messages, but instead try
+          to find out why <span><strong class="command">mysqld</strong></span> died.
+        </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="reproducible-test-case"></a>26.4.1.7. Making a Test Case If You Experience Table Corruption</h4></div></div></div><p>
+          If you get corrupted tables or if <span><strong class="command">mysqld</strong></span>
+          always fails after some update commands, you can test whether
+          this bug is reproducible by doing the following:
+        </p><div class="itemizedlist"><ul type="disc"><li><p>
+              Take down the MySQL daemon (with <span><strong class="command">mysqladmin
+              shutdown</strong></span>).
+            </p></li><li><p>
+              Make a backup of the tables (to guard against the very
+              unlikely case that the repair does something bad).
+            </p></li><li><p>
+              Check all tables with <span><strong class="command">myisamchk -s
+              database/*.MYI</strong></span>. Repair any wrong tables with
+              <span><strong class="command">myisamchk -r
+              database/<em class="replaceable"><code>table</code></em>.MYI</strong></span>.
+            </p></li><li><p>
+              Make a second backup of the tables.
+            </p></li><li><p>
+              Remove (or move away) any old log files from the MySQL
+              data directory if you need more space.
+            </p></li><li><p>
+              Start <span><strong class="command">mysqld</strong></span> with
+              <code class="option">--log-bin</code>. See
+              <a href="server-administration.html#binary-log" title="5.2.3. The Binary Log">Section 5.2.3, “The Binary Log”</a>. If you want to find a query
+              that crashes <span><strong class="command">mysqld</strong></span>, you should use
+              <code class="option">--log --log-bin</code>.
+            </p></li><li><p>
+              When you have gotten a crashed table, stop the
+              <code class="literal">mysqld server</code>.
+            </p></li><li><p>
+              Restore the backup.
+            </p></li><li><p>
+              Restart the <span><strong class="command">mysqld</strong></span> server
+              <span class="bold"><strong>without</strong></span>
+              <code class="option">--log-bin</code>
+            </p></li><li><p>
+              Re-execute the commands with <span><strong class="command">mysqlbinlog
+              binary-log-file | mysql</strong></span>. The binary log is saved
+              in the MySQL database directory with the name
+              <code class="literal">hostname-bin.#</code>.
+            </p></li><li><p>
+              If the tables are corrupted again or you can get
+              <span><strong class="command">mysqld</strong></span> to die with the above command,
+              you have found reproducible bug that should be easy to
+              fix! FTP the tables and the binary log to
+              <a href="ftp://ftp.mysql.com/pub/mysql/upload/" target="_top">ftp://ftp.mysql.com/pub/mysql/upload/</a> and report it in our
+              bugs database using the instructions given in
+              <a href="introduction.html#bug-reports" title="1.7. How to Report Bugs or Problems">Section 1.7, “How to Report Bugs or Problems”</a>. (Please note that the
+              <code class="filename">/pub/mysql/upload/</code> FTP directory is
+              not listable, so you'll not see what you've uploaded in
+              your FTP client.) If you are a support customer, you can
+              use the MySQL Customer Support Center
+              <a href="https://support.mysql.com/" target="_top">https://support.mysql.com/</a> to alert the
+              MySQL team about the problem and have it fixed as soon as
+              possible.
+            </p></li></ul></div><p>
+          You can also use the script <span><strong class="command">mysql_find_rows</strong></span>
+          to just execute some of the update statements if you want to
+          narrow down the problem.
+        </p><p>
+          The preceding discussion applies only to RHEL4. The patch is
+          unnecessary for RHEL5.
+        </p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="debugging-client"></a>26.4.2. Debugging a MySQL Client</h3></div></div></div><a class="indexterm" name="id4650147"></a><a class="indexterm" name="id4650159"></a><p>
+        To be able to debug a MySQL client with the integrated debug
+        package, you should configure MySQL with
+        <code class="option">--with-debug</code> or
+        <code class="option">--with-debug=full</code>. See
+        <a href="installing.html#configure-options" title="2.4.15.2. Typical configure Options">Section 2.4.15.2, “Typical <span><strong class="command">configure</strong></span> Options”</a>.
+      </p><a class="indexterm" name="id4650188"></a><a class="indexterm" name="id4650197"></a><p>
+        Before running a client, you should set the
+        <code class="literal">MYSQL_DEBUG</code> environment variable:
+      </p><pre class="programlisting">shell&gt; <strong class="userinput"><code>MYSQL_DEBUG=d:t:O,/tmp/client.trace</code></strong>
+shell&gt; <strong class="userinput"><code>export MYSQL_DEBUG</code></strong>
+</pre><p>
+        This causes clients to generate a trace file in
+        <code class="filename">/tmp/client.trace</code>.
+      </p><p>
+        If you have problems with your own client code, you should
+        attempt to connect to the server and run your query using a
+        client that is known to work. Do this by running
+        <span><strong class="command">mysql</strong></span> in debugging mode (assuming that you
+        have compiled MySQL with debugging on):
+      </p><pre class="programlisting">shell&gt; <strong class="userinput"><code>mysql --debug=d:t:O,/tmp/client.trace</code></strong>
+</pre><p>
+        This provides useful information in case you mail a bug report.
+        See <a href="introduction.html#bug-reports" title="1.7. How to Report Bugs or Problems">Section 1.7, “How to Report Bugs or Problems”</a>.
+      </p><p>
+        If your client crashes at some 'legal' looking code, you should
+        check that your <code class="filename">mysql.h</code> include file
+        matches your MySQL library file. A very common mistake is to use
+        an old <code class="filename">mysql.h</code> file from an old MySQL
+        installation with new MySQL library.
+      </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="the-dbug-package"></a>26.4.3. The DBUG Package</h3></div></div></div><a class="indexterm" name="id4650306"></a><p>
+        The MySQL server and most MySQL clients are compiled with the
+        DBUG package originally created by Fred Fish. When you have
+        configured MySQL for debugging, this package makes it possible
+        to get a trace file of what the program is debugging. See
+        <a href="extending-mysql.html#making-trace-files" title="26.4.1.2. Creating Trace Files">Section 26.4.1.2, “Creating Trace Files”</a>.
+      </p><p>
+        This section summaries the argument values that you can specify
+        in debug options on the command line for MySQL programs that
+        have been built with debugging support. For more information
+        about programming with the DBUG package, see the DBUG manual in
+        the <code class="filename">dbug</code> directory of MySQL source
+        distributions. It's best to use a recent distribution to get the
+        most updated DBUG manual.
+      </p><p>
+        You use the debug package by invoking a program with the
+        <code class="option">--debug="..."</code> or the <code class="option">-#...</code>
+        option.
+      </p><p>
+        Most MySQL programs have a default debug string that is used if
+        you don't specify an option to <code class="option">--debug</code>. The
+        default trace file is usually
+        <code class="literal">/tmp/program_name.trace</code> on Unix and
+        <code class="literal">\program_name.trace</code> on Windows.
+      </p><p>
+        The debug control string is a sequence of colon-separated fields
+        as follows:
+      </p><pre class="programlisting">&lt;field_1&gt;:&lt;field_2&gt;:...:&lt;field_N&gt;
+</pre><p>
+        Each field consists of a mandatory flag character followed by an
+        optional “<span class="quote"><code class="literal">,</code></span>” and comma-separated
+        list of modifiers:
+      </p><pre class="programlisting">flag[,modifier,modifier,...,modifier]
+</pre><p>
+        The currently recognized flag characters are:
+      </p><div class="informaltable"><table border="1"><colgroup><col><col></colgroup><tbody><tr><td><span class="bold"><strong>Flag</strong></span></td><td><span class="bold"><strong>Description</strong></span></td></tr><tr><td><code class="literal">d</code></td><td>Enable output from DBUG_&lt;N&gt; macros for the current state. May be
+                followed by a list of keywords which selects output only
+                for the DBUG macros with that keyword. An empty list of
+                keywords implies output for all macros.</td></tr><tr><td><code class="literal">D</code></td><td>Delay after each debugger output line. The argument is the number of
+                tenths of seconds to delay, subject to machine
+                capabilities. For example, <code class="option">-#D,20</code>
+                specifies a delay of two seconds.</td></tr><tr><td><code class="literal">f</code></td><td>Limit debugging, tracing, and profiling to the list of named functions.
+                Note that a null list disables all functions. The
+                appropriate <code class="literal">d</code> or <code class="literal">t</code>
+                flags must still be given; this flag only limits their
+                actions if they are enabled.</td></tr><tr><td><code class="literal">F</code></td><td>Identify the source file name for each line of debug or trace output.</td></tr><tr><td><code class="literal">i</code></td><td>Identify the process with the PID or thread ID for each line of debug or
+                trace output.</td></tr><tr><td><code class="literal">g</code></td><td>Enable profiling. Create a file called <code class="filename">dbugmon.out</code>
+                containing information that can be used to profile the
+                program. May be followed by a list of keywords that
+                select profiling only for the functions in that list. A
+                null list implies that all functions are considered.</td></tr><tr><td><code class="literal">L</code></td><td>Identify the source file line number for each line of debug or trace
+                output.</td></tr><tr><td><code class="literal">n</code></td><td>Print the current function nesting depth for each line of debug or trace
+                output.</td></tr><tr><td><code class="literal">N</code></td><td>Number each line of debug output.</td></tr><tr><td><code class="literal">o</code></td><td>Redirect the debugger output stream to the specified file. The default
+                output is <code class="literal">stderr</code>.</td></tr><tr><td><code class="literal">O</code></td><td>Like <code class="literal">o</code>, but the file is really flushed between each
+                write. When needed, the file is closed and reopened
+                between each write.</td></tr><tr><td><code class="literal">p</code></td><td>Limit debugger actions to specified processes. A process must be
+                identified with the <code class="literal">DBUG_PROCESS</code>
+                macro and match one in the list for debugger actions to
+                occur.</td></tr><tr><td><code class="literal">P</code></td><td>Print the current process name for each line of debug or trace output.</td></tr><tr><td><code class="literal">r</code></td><td>When pushing a new state, do not inherit the previous state's function
+                nesting level. Useful when the output is to start at the
+                left margin.</td></tr><tr><td><code class="literal">S</code></td><td>Do function <code class="literal">_sanity(_file_,_line_)</code> at each debugged
+                function until <code class="literal">_sanity()</code> returns
+                something that differs from 0. (Mostly used with
+                <code class="literal">safemalloc</code> to find memory leaks)</td></tr><tr><td><code class="literal">t</code></td><td>Enable function call/exit trace lines. May be followed by a list
+                (containing only one modifier) giving a numeric maximum
+                trace level, beyond which no output occurs for either
+                debugging or tracing macros. The default is a compile
+                time option.</td></tr></tbody></table></div><p>
+        Some examples of debug control strings that might appear on a
+        shell command line (the <code class="option">-#</code> is typically used to
+        introduce a control string to an application program) are:
+      </p><pre class="programlisting">-#d:t
+-#d:f,main,subr1:F:L:t,20
+-#d,input,output,files:n
+-#d:t:i:O,\\mysqld.trace
+</pre><p>
+        In MySQL, common tags to print (with the <code class="literal">d</code>
+        option) are <code class="literal">enter</code>, <code class="literal">exit</code>,
+        <code class="literal">error</code>, <code class="literal">warning</code>,
+        <code class="literal">info</code>, and <code class="literal">loop</code>.
+      </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="rts-threads"></a>26.4.4. Comments about RTS Threads</h3></div></div></div><a class="indexterm" name="id4650795"></a><a class="indexterm" name="id4650804"></a><p>
+        I have tried to use the RTS thread packages with MySQL but
+        stumbled on the following problems:
+      </p><p>
+        They use old versions of many POSIX calls and it is very tedious
+        to make wrappers for all functions. I am inclined to think that
+        it would be easier to change the thread libraries to the newest
+        POSIX specification.
+      </p><p>
+        Some wrappers are currently written. See
+        <code class="filename">mysys/my_pthread.c</code> for more info.
+      </p><p>
+        At least the following should be changed:
+      </p><p>
+        <code class="literal">pthread_get_specific</code> should use one argument.
+        <code class="literal">sigwait</code> should take two arguments. A lot of
+        functions (at least <code class="literal">pthread_cond_wait</code>,
+        <code class="literal">pthread_cond_timedwait()</code>) should return the
+        error code on error. Now they return -1 and set
+        <code class="literal">errno</code>.
+      </p><p>
+        Another problem is that user-level threads use the
+        <code class="literal">ALRM</code> signal and this aborts a lot of
+        functions (<code class="literal">read</code>, <code class="literal">write</code>,
+        <code class="literal">open</code>...). MySQL should do a retry on
+        interrupt on all of these but it is not that easy to verify it.
+      </p><p>
+        The biggest unsolved problem is the following:
+      </p><p>
+        To get thread-level alarms I changed
+        <code class="filename">mysys/thr_alarm.c</code> to wait between alarms
+        with <code class="literal">pthread_cond_timedwait()</code>, but this
+        aborts with error <code class="literal">EINTR</code>. I tried to debug the
+        thread library as to why this happens, but couldn't find any
+        easy solution.
+      </p><p>
+        If someone wants to try MySQL with RTS threads I suggest the
+        following:
+      </p><div class="itemizedlist"><ul type="disc"><li><p>
+            Change functions MySQL uses from the thread library to
+            POSIX. This shouldn't take that long.
+          </p></li><li><p>
+            Compile all libraries with the
+            <code class="option">-DHAVE_rts_threads</code>.
+          </p></li><li><p>
+            Compile <code class="literal">thr_alarm</code>.
+          </p></li><li><p>
+            If there are some small differences in the implementation,
+            they may be fixed by changing
+            <code class="filename">my_pthread.h</code> and
+            <code class="filename">my_pthread.c</code>.
+          </p></li><li><p>
+            Run <code class="literal">thr_alarm</code>. If it runs without any
+            “<span class="quote">warning,</span>” “<span class="quote">error,</span>” or aborted
+            messages, you are on the right track. Here is a successful
+            run on Solaris:
+          </p><pre class="programlisting">Main thread: 1
+Thread 0 (5) started
+Thread: 5  Waiting
+process_alarm
+Thread 1 (6) started
+Thread: 6  Waiting
+process_alarm
+process_alarm
+thread_alarm
+Thread: 6  Slept for 1 (1) sec
+Thread: 6  Waiting
+process_alarm
+process_alarm
+thread_alarm
+Thread: 6  Slept for 2 (2) sec
+Thread: 6  Simulation of no alarm needed
+Thread: 6  Slept for 0 (3) sec
+Thread: 6  Waiting
+process_alarm
+process_alarm
+thread_alarm
+Thread: 6  Slept for 4 (4) sec
+Thread: 6  Waiting
+process_alarm
+thread_alarm
+Thread: 5  Slept for 10 (10) sec
+Thread: 5  Waiting
+process_alarm
+process_alarm
+thread_alarm
+Thread: 6  Slept for 5 (5) sec
+Thread: 6  Waiting
+process_alarm
+process_alarm
+
+...
+thread_alarm
+Thread: 5  Slept for 0 (1) sec
+end
+</pre></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="thread-packages"></a>26.4.5. Differences Between Thread Packages</h3></div></div></div><a class="indexterm" name="id4651035"></a><p>
+        MySQL is very dependent on the thread package used. So when
+        choosing a good platform for MySQL, the thread package is very
+        important.
+      </p><p>
+        There are at least three types of thread packages:
+      </p><div class="itemizedlist"><ul type="disc"><li><p>
+            User threads in a single process. Thread switching is
+            managed with alarms and the threads library manages all
+            non-thread-safe functions with locks. Read, write and select
+            operations are usually managed with a thread-specific select
+            that switches to another thread if the running threads have
+            to wait for data. If the user thread packages are integrated
+            in the standard libs (FreeBSD and BSDI threads) the thread
+            package requires less overhead than thread packages that
+            have to map all unsafe calls (MIT-pthreads, FSU Pthreads and
+            RTS threads). In some environments (for example, SCO), all
+            system calls are thread-safe so the mapping can be done very
+            easily (FSU Pthreads on SCO). Downside: All mapped calls
+            take a little time and it's quite tricky to be able to
+            handle all situations. There are usually also some system
+            calls that are not handled by the thread package (like
+            MIT-pthreads and sockets). Thread scheduling isn't always
+            optimal.
+          </p></li><li><p>
+            User threads in separate processes. Thread switching is done
+            by the kernel and all data are shared between threads. The
+            thread package manages the standard thread calls to allow
+            sharing data between threads. LinuxThreads is using this
+            method. Downside: Lots of processes. Thread creating is
+            slow. If one thread dies the rest are usually left hanging
+            and you must kill them all before restarting. Thread
+            switching is somewhat expensive.
+          </p></li><li><p>
+            Kernel threads. Thread switching is handled by the thread
+            library or the kernel and is very fast. Everything is done
+            in one process, but on some systems, <span><strong class="command">ps</strong></span>
+            may show the different threads. If one thread aborts, the
+            whole process aborts. Most system calls are thread-safe and
+            should require very little overhead. Solaris, HP-UX, AIX and
+            OSF/1 have kernel threads.
+          </p></li></ul></div><p>
+        In some systems kernel threads are managed by integrating user
+        level threads in the system libraries. In such cases, the thread
+        switching can only be done by the thread library and the kernel
+        isn't really “<span class="quote">thread aware.</span>”
+      </p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="mysql-proxy.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="faqs.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 25. MySQL Proxy </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Appendix A. MySQL 5.0 Frequently Asked Questions</td></tr></table></div></body></html>
